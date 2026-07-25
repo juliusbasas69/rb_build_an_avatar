@@ -1,54 +1,21 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+
 local TweenService = game:GetService("TweenService")
 
-local ItemDatabase = require(ReplicatedStorage.Shared.Modules.ItemDatabase)
+local ItemRollService = require(ServerScriptService.Server.Services.ItemRollService)
 local MutationDatabase = require(ReplicatedStorage.Shared.Modules.MutationDatabase)
 local RarityDatabase = require(ReplicatedStorage.Shared.Modules.RarityDatabase)
-local ConveyorLevelDatabase = require(ReplicatedStorage.Shared.Modules.ConveyorLevelDatabase)
-local LuckMultiplierDatabase = require(ReplicatedStorage.Shared.Modules.LuckMultiplierDatabase)
-local MutationLuckMultiplierDatabase = require(ReplicatedStorage.Shared.Modules.MutationLuckMultiplierDatabase)
 
 local BaseMannequin = ReplicatedStorage.Models:WaitForChild("BaseMannequin")
 
-local ItemsByRarity = {}
 local CurrentMannequin = {}
 
-for _, item in pairs(ItemDatabase) do
-	ItemsByRarity[item.Rarity] = ItemsByRarity[item.Rarity] or {}
-	table.insert(ItemsByRarity[item.Rarity], item)
-end
+local multipleMannequin = false
+local maxMannequins = 3
+local speed = 16
 
-local function moveModel(model, destination, speed, lookAt, destroyAfter)
-	local rootPart = model:WaitForChild("HumanoidRootPart")
-
-	local distance = (rootPart.Position - destination.Position).Magnitude
-	local duration = distance / speed
-
-	local tween = TweenService:Create(
-		rootPart,
-		TweenInfo.new(duration, Enum.EasingStyle.Linear),
-		{
-			Position = destination.Position
-		}
-	)
-
-	tween:Play()
-	tween.Completed:Wait()
-
-	if lookAt then
-		local target = Vector3.new(
-			lookAt.Position.X,
-			rootPart.Position.Y,
-			lookAt.Position.Z
-		)
-
-		rootPart.CFrame = CFrame.lookAt(rootPart.Position, target)
-	end
-
-	if destroyAfter and model.Parent then
-		model:Destroy()
-	end
-end
+local ConveyorService = {}
 
 local function applyItem(humanoid, item)
 	local description = Instance.new("HumanoidDescription")
@@ -81,31 +48,7 @@ local function applyItem(humanoid, item)
 	humanoid:ApplyDescription(description)
 end
 
-
-local function displayItem(item, mutation, plot)
-
-	local spawnPoint = plot.Conveyor.SpawnPoint.SpawnPoint
-	local stopPoint = plot.Conveyor.StopPoint.StopPoint
-	local destroyPoint = plot.Conveyor.DestroyPoint.DestroyPoint
-	local SpawnButton = plot.SpawnButton.Part
-
-	-- Remove previous mannequin
-	if CurrentMannequin[plot] then
-		moveModel(CurrentMannequin[plot], destroyPoint, 8)
-		CurrentMannequin[plot]:Destroy()
-		CurrentMannequin[plot] = nil
-	end
-
-	local mannequin = BaseMannequin:Clone()
-	mannequin.Parent = plot
-	mannequin:PivotTo(spawnPoint.CFrame)
-
-	local humanoid = mannequin:WaitForChild("Humanoid")
-	
-	applyItem(humanoid, item)
-	
-	local head = mannequin:FindFirstChild("Head")
-
+local function updateMannequinInfo(mannequin, item, mutation)
 	local head = mannequin:FindFirstChild("Head")
 
 	if head then
@@ -125,152 +68,189 @@ local function displayItem(item, mutation, plot)
 		nameLabel.Text = item.Name
 		nameLabel.TextColor3 = Color3.new(1, 1, 1)
 
-		costLabel.Text = "$" .. item.Price
+		costLabel.Text = "$" .. math.floor(item.Price * MutationDatabase[mutation].CostMultiplier)
 		costLabel.TextColor3 = Color3.fromRGB(255, 223, 0)
 	end
+end
 
-	CurrentMannequin[plot] = mannequin
+local function moveMannequin(models, lookAt)
 
-	task.spawn(function()
-		moveModel(mannequin, stopPoint, 16, SpawnButton)
+	for index, data in ipairs(models) do
+
+		task.spawn(function()
+
+			-- stagger spawn
+			task.wait((index - 1) * 0.5)
+
+			local plot = data.Plot
+			local spawnPoint = plot.Conveyor.SpawnPoint.SpawnPoint
+
+			local mannequin = BaseMannequin:Clone()
+			mannequin.Parent = plot
+			mannequin:PivotTo(spawnPoint.CFrame)
+
+			local humanoid = mannequin:WaitForChild("Humanoid")
+
+			applyItem(humanoid, data.Item)
+			updateMannequinInfo(mannequin, data.Item, data.Mutation)
+
+			local rootPart = mannequin:WaitForChild("HumanoidRootPart")
+			local destination = data.StopPoint
+
+			local distance = (rootPart.Position - destination.Position).Magnitude
+			local duration = distance / speed
+
+			local tween = TweenService:Create(
+				rootPart,
+				TweenInfo.new(duration, Enum.EasingStyle.Linear),
+				{
+					Position = destination.Position
+				}
+			)
+
+			tween:Play()
+
+			tween.Completed:Wait()
+
+			if lookAt and mannequin.Parent then
+
+				local target = Vector3.new(
+					lookAt.Position.X,
+					rootPart.Position.Y,
+					lookAt.Position.Z
+				)
+
+				rootPart.CFrame = CFrame.lookAt(rootPart.Position, target)
+			end
+
+			data.Model = mannequin
+
+		end)
+
+	end
+
+end
+
+
+local function destroyMannequin(models, destroyPoint)
+
+	for _, data in ipairs(models) do 
+
+		task.spawn(function()
+
+			local mannequin = data.Model
+
+			local rootPart = mannequin:WaitForChild("HumanoidRootPart")
+
+			local distance = (rootPart.Position - destroyPoint.Position).Magnitude
+			local duration = distance / speed
+
+			local tween = TweenService:Create(
+				rootPart,
+				TweenInfo.new(duration, Enum.EasingStyle.Linear),
+				{
+					Position = destroyPoint.Position
+				}
+			)
+
+			tween:Play()
+			tween.Completed:Wait()
+
+			if mannequin.Parent then
+				mannequin:Destroy()
+			end
+
+		end)
+
+	end
+
+end
+
+
+
+
+local function displayItem(item, mutation, plot, index)
+
+	CurrentMannequin[plot] = CurrentMannequin[plot] or {}
+
+	local stopPoints = plot.Conveyor.StopPoints:GetChildren()
+
+	table.sort(stopPoints, function(a, b)
+		return tonumber(a.Name) < tonumber(b.Name)
 	end)
-end
 
+	local stopPoint
 
-local playerLuck = 50
-local mutationLuck = 100
-
-
-local ConveyorService = {}
-
-
-function ConveyorService:GetLootTable(conveyorLevel)
-	return ConveyorLevelDatabase[tonumber(conveyorLevel)]
-end
-
-
-function ConveyorService:ApplyLuck(rarity, weight, luck)
-
-	local multiplier = LuckMultiplierDatabase[rarity] or 0
-
-	return weight * (
-		1 + ((luck - 1) / 100) * multiplier
-	)
-
-end
-
-function ConveyorService:ApplyMutationLuck(mutation, chance, luck)
-
-	local multiplier = MutationLuckMultiplierDatabase[mutation] or 0
-
-	return chance * (
-		1 + ((luck - 1) / 100) * multiplier
-	)
-
-end
-
-
-function ConveyorService:RollRarity(conveyorLevel)
-
-	local lootTable = self:GetLootTable(conveyorLevel)
-
-	if not lootTable then
-		warn("No loot table found for level:", conveyorLevel)
-		return nil
+	if multipleMannequin then
+		-- 1st mannequin -> 3rd stop
+		-- 2nd mannequin -> 2nd stop
+		-- 3rd mannequin -> 1st stop
+		stopPoint = stopPoints[maxMannequins - index + 1]
+	else
+		-- Single mannequin goes middle
+		stopPoint = stopPoints[2]
 	end
 
-	local adjustedTable = {}
-	local totalWeight = 0
-
-	for rarity, weight in pairs(lootTable) do
-
-		local adjustedWeight = self:ApplyLuck(
-			rarity,
-			weight,
-			playerLuck
-		)
-
-		adjustedTable[rarity] = adjustedWeight
-		totalWeight += adjustedWeight
-
+	if not stopPoint then
+		warn("No stop point found!")
+		return
 	end
 
-	local roll = Random.new():NextNumber(0, totalWeight)
+	table.insert(CurrentMannequin[plot], {
+		Item = item,
+		Mutation = mutation,
+		StopPoint = stopPoint,
+		Plot = plot
+	})
 
-	local current = 0
-
-	for rarity, weight in pairs(adjustedTable) do
-
-		current += weight
-
-		if roll <= current then
-			return rarity
-		end
-	end
 end
 
-function ConveyorService:GetItemsByRarity(rarity)
-	return ItemsByRarity[rarity] or {}
-end
 
-function ConveyorService:RollMutation()
-	local adjustedTable = {}
-	local totalChance = 0
-
-
-	for mutation, data in pairs(MutationDatabase) do
-
-		local adjustedChance = self:ApplyMutationLuck(
-			mutation,
-			data.Chance,
-			mutationLuck
-		)
-
-		adjustedTable[mutation] = adjustedChance
-		totalChance += adjustedChance
-	end
-
-
-	local roll = Random.new():NextNumber(0, totalChance)
-
-	local current = 0
-
-	for mutation, chance in pairs(adjustedTable) do
-
-		current += chance
-
-		if roll <= current then
-			return mutation
-		end
-	end
-end
 
 
 
 function ConveyorService:SpawnItem(player, plot)
 
+	local destroyPoint = plot.Conveyor.DestroyPoint.DestroyPoint
+
+	
+
+	CurrentMannequin[plot] = CurrentMannequin[plot] or {}
+
+	destroyMannequin(CurrentMannequin[plot], destroyPoint)
+
+	table.clear(CurrentMannequin[plot])
+
+
 	local conveyorLevel = plot:GetAttribute("ConveyorLevel")
 
-	local rarity = self:RollRarity(conveyorLevel)
-	local mutation = self:RollMutation()
+	local spawnCount = multipleMannequin and maxMannequins or 1
 
-	print("Rolled rarity:", rarity)
-	print("Rolled mutation:", mutation)
+	local spawnedMannequins = {}
 
-	local itemPool = self:GetItemsByRarity(rarity)
+	for i = 1, spawnCount do
 
-	if #itemPool == 0 then
-		warn("No items found for rarity:", rarity)
-		return
+		local rarity = ItemRollService:RollRarity(conveyorLevel)
+		local mutation = ItemRollService:RollMutation()
+
+		local itemPool = ItemRollService:GetItemsByRarity(rarity)
+
+		local selectedItem = itemPool[
+			Random.new():NextInteger(1, #itemPool)
+		]
+
+		displayItem(
+			selectedItem,
+			mutation,
+			plot,
+			i
+		)
+
 	end
 
-	local selectedItem = itemPool[Random.new():NextInteger(1, #itemPool)]
+	-- MOVE ALL ONCE
+	moveMannequin(CurrentMannequin[plot], plot.SpawnButton.Part)
 
-	print("Selected Item:", selectedItem.Name)
-
-	displayItem(selectedItem, mutation, plot)
-
-	return selectedItem, mutation
 end
 
 return ConveyorService
