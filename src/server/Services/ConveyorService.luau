@@ -35,17 +35,30 @@ local function applyItem(humanoid, item)
 	elseif item.Type == "Pants" then
 		description.Pants = item.AssetId
 
-	elseif item.Type == "BackAccessory" then
+	elseif item.Type == "Back" then
 		description.BackAccessory = tostring(item.AssetId)
 
-	elseif item.Type == "HatAccessory" then
+	elseif item.Type == "Hat" then
 		description.HatAccessory = tostring(item.AssetId)
 
-	elseif item.Type == "HairAccessory" then
+	elseif item.Type == "Hair" then
 		description.HairAccessory = tostring(item.AssetId)
+	
+	elseif item.Type == "Face" then
+		description.FaceAccessory = tostring(item.AssetId)
+	
+	elseif item.Type == "Head" then
+		description.Head = tostring(item.AssetId)	
 	end
+	
 
-	humanoid:ApplyDescription(description)
+	local success, err = pcall(function()
+		humanoid:ApplyDescription(description)
+	end)
+
+	if not success then
+		warn("Failed applying item:", err)
+	end
 end
 
 local function updateMannequinInfo(mannequin, item, mutation)
@@ -79,7 +92,6 @@ local function moveMannequin(models, lookAt)
 
 		task.spawn(function()
 
-			-- stagger spawn
 			task.wait((index - 1) * 0.5)
 
 			local plot = data.Plot
@@ -91,11 +103,21 @@ local function moveMannequin(models, lookAt)
 
 			local humanoid = mannequin:WaitForChild("Humanoid")
 
+			-- Apply avatar first
 			applyItem(humanoid, data.Item)
-			updateMannequinInfo(mannequin, data.Item, data.Mutation)
+
+			-- Wait until Roblox finishes loading accessories/clothes
+			task.wait(0.2)
+
+			updateMannequinInfo(
+				mannequin,
+				data.Item,
+				data.Mutation
+			)
 
 			local rootPart = mannequin:WaitForChild("HumanoidRootPart")
 			local destination = data.StopPoint
+
 
 			local distance = (rootPart.Position - destination.Position).Magnitude
 			local duration = distance / speed
@@ -112,6 +134,7 @@ local function moveMannequin(models, lookAt)
 
 			tween.Completed:Wait()
 
+
 			if lookAt and mannequin.Parent then
 
 				local target = Vector3.new(
@@ -120,8 +143,12 @@ local function moveMannequin(models, lookAt)
 					lookAt.Position.Z
 				)
 
-				rootPart.CFrame = CFrame.lookAt(rootPart.Position, target)
+				rootPart.CFrame = CFrame.lookAt(
+					rootPart.Position,
+					target
+				)
 			end
+
 
 			data.Model = mannequin
 
