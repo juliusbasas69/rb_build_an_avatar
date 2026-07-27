@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local CollectionService = game:GetService("CollectionService")
 
 local TweenService = game:GetService("TweenService")
 
@@ -11,7 +12,7 @@ local BaseMannequin = ReplicatedStorage.Models:WaitForChild("BaseMannequin")
 
 local CurrentMannequin = {}
 
-local multipleMannequin = false
+local multipleMannequin = true
 local maxMannequins = 3
 local speed = 16
 
@@ -54,6 +55,7 @@ local function applyItem(humanoid, item)
 
 	local success, err = pcall(function()
 		humanoid:ApplyDescription(description)
+
 	end)
 
 	if not success then
@@ -74,9 +76,11 @@ local function updateMannequinInfo(mannequin, item, mutation)
 
 		mutationLabel.Text = mutation
 		mutationLabel.TextColor3 = MutationDatabase[mutation].Color or Color3.new(1, 1, 1)
+		CollectionService:AddTag(mutationLabel, mutation)
 
 		rarityLabel.Text = item.Rarity
 		rarityLabel.TextColor3 = RarityDatabase[item.Rarity].Color
+		CollectionService:AddTag(rarityLabel, item.Rarity)
 
 		nameLabel.Text = item.Name
 		nameLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -92,7 +96,9 @@ local function moveMannequin(models, lookAt)
 
 		task.spawn(function()
 
-			task.wait((index - 1) * 0.5)
+			local spawnDelay = (speed >= 16) and 0.35 or 0.7
+
+			task.wait((index - 1) * spawnDelay)
 
 			local plot = data.Plot
 			local spawnPoint = plot.Conveyor.SpawnPoint.SpawnPoint
@@ -133,6 +139,16 @@ local function moveMannequin(models, lookAt)
 			tween:Play()
 
 			tween.Completed:Wait()
+
+			local prompt = Instance.new("ProximityPrompt")
+			prompt.ActionText = "Buy"
+			prompt.ObjectText = data.Item.Name
+			prompt.KeyboardKeyCode = Enum.KeyCode.E
+			prompt.MaxActivationDistance = 10
+			prompt.RequiresLineOfSight = false
+			prompt.Parent = mannequin:WaitForChild("HumanoidRootPart")
+			prompt.HoldDuration = 2
+			CollectionService:AddTag(prompt, "BuyItemPrompt")
 
 
 			if lookAt and mannequin.Parent then

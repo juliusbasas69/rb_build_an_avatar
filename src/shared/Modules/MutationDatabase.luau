@@ -17,7 +17,7 @@ local MutationDatabase = {
 		Chance = 1.20,
 		IncomeMultiplier = 3.0,
 		CostMultiplier = 2.8,
-		Color = Color3.fromRGB(255, 255, 255),
+		Color = Color3.fromRGB(245, 245, 255),
 	},
 
 	Crystal = {
@@ -48,11 +48,11 @@ local MutationDatabase = {
 		Effect = "Stars",
 	},
 
-	Void = {
+	Cursed = {
 		Chance = 0.01,
 		IncomeMultiplier = 50.0,
 		CostMultiplier = 70.0,
-		Effect = "Void",
+		Effect = "Cursed",
 	},
 }
 

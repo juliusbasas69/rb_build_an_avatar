@@ -26,7 +26,7 @@ local RarityDatabase = {
 
 	Mythic = {
 		Weight = 0.5,
-		Color = Color3.fromRGB(255, 0, 85), -- Magenta
+		Color = Color3.fromRGB(255, 0, 85), -- Pink/Red
 	},
 
 	Divine = {
@@ -44,9 +44,29 @@ local RarityDatabase = {
 		Color = Color3.fromRGB(255, 255, 255), -- White
 	},
 
-	Secret = {
+	Transcendent = {
+		Weight = 0.005,
+		Color = Color3.fromRGB(255, 80, 80), -- Crimson
+	},
+
+	Cosmic = {
+		Weight = 0.002,
+		Color = Color3.fromRGB(120, 70, 255), -- Deep Violet
+	},
+
+	Prismatic = {
 		Weight = 0.001,
-		Color = Color3.fromRGB(255, 0, 0), -- Red
+		Color = Color3.fromRGB(255, 105, 180), -- Rainbow-like theme (use gradient in UI)
+	},
+
+	Void = {
+		Weight = 0.0005,
+		Color = Color3.fromRGB(40, 40, 40), -- Dark Gray
+	},
+
+	Secret = {
+		Weight = 0.0001,
+		Color = Color3.fromRGB(0, 0, 0), -- Black
 	},
 }
 

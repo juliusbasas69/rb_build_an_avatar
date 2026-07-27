@@ -69,8 +69,8 @@ local function updateStatue(player, plot)
 		billboard.Name = "OwnerBillboard"
 		billboard.Adornee = head
 		billboard.Parent = head
-		billboard.Size = UDim2.fromOffset(220, 70)
-		billboard.StudsOffset = Vector3.new(0, 3.5, 0)
+		billboard.Size = UDim2.fromScale(10, 5)
+		billboard.StudsOffset = Vector3.new(0, 4, 0)
 		billboard.AlwaysOnTop = true
 		billboard.MaxDistance = 80
 
@@ -80,10 +80,11 @@ local function updateStatue(player, plot)
 		textLabel.BackgroundTransparency = 1
 		textLabel.RichText = true
 		textLabel.TextScaled = true
-		textLabel.Font = Enum.Font.GothamBlack
+		textLabel.FontFace = Font.new("rbxassetid://12187370000")
+		textLabel.TextWrapped = true
 
 		textLabel.Text = string.format(
-			"<font color='#FFD700' size='18'>👑 OWNER</font>\n<font color='#FFFFFF' size='28'><b>%s</b></font>",
+			"<font color='#FFD700'><b>👑 OWNER</b></font>\n\n<font color='#FFFFFF'><b>%s</b></font>",
 			player.DisplayName
 		)
 
