@@ -107,7 +107,7 @@ function PlotService:AssignPlot(player)
 	plot:SetAttribute("Occupied", true)
 	plot:SetAttribute("OwnerId", player.UserId)
 	plot:SetAttribute("OwnerName", player.Name)
-	plot:SetAttribute("ConveyorLevel", 1)
+	plot:SetAttribute("ConveyorLevel", 5)
 
 	-- Cache the player's plot
 	PlayerPlots[player] = plot

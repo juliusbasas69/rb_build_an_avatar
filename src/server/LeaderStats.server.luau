@@ -1,6 +1,12 @@
+local ServerScriptService = game:GetService("ServerScriptService")
+
+local UserService = require(ServerScriptService.Server.Services.UserService)
+
 local Players = game:GetService("Players")
 
 Players.PlayerAdded:Connect(function(player)
+
+	local data = UserService:UserInitial(player)
 	
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
@@ -8,6 +14,9 @@ Players.PlayerAdded:Connect(function(player)
 	
 	local gold = Instance.new("NumberValue")
 	gold.Name = "Gold"
-	gold.Value = 10000
+	gold.Value = data.Gold
 	gold.Parent = leaderstats 
+
+
+
 end)

@@ -9,8 +9,9 @@ local MutationLuckMultiplierDatabase = require(ReplicatedStorage.Shared.Modules.
 
 local ItemsByRarity = {}
 
-local playerLuck = 50
-local mutationLuck = 100
+--THIS IS GAMEPASS
+local playerLuck = 1
+local mutationLuck = 1
 
 local ItemRollService = {}
 

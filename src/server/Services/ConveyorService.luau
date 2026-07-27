@@ -12,9 +12,9 @@ local BaseMannequin = ReplicatedStorage.Models:WaitForChild("BaseMannequin")
 
 local CurrentMannequin = {}
 
-local multipleMannequin = true
-local maxMannequins = 3
-local speed = 16
+--THIS IS GAMEPASS
+local mannequinCount = 1
+local speed = 8
 
 local ConveyorService = {}
 
@@ -224,14 +224,17 @@ local function displayItem(item, mutation, plot, index)
 
 	local stopPoint
 
-	if multipleMannequin then
-		-- 1st mannequin -> 3rd stop
-		-- 2nd mannequin -> 2nd stop
-		-- 3rd mannequin -> 1st stop
-		stopPoint = stopPoints[maxMannequins - index + 1]
-	else
-		-- Single mannequin goes middle
-		stopPoint = stopPoints[2]
+	if mannequinCount == 1 then
+		-- Single mannequin goes to the middle
+		stopPoint = stopPoints[3]
+
+	elseif mannequinCount == 3 then
+		-- 1st -> 4, 2nd -> 3, 3rd -> 2
+		stopPoint = stopPoints[5 - index]
+
+	elseif mannequinCount == 5 then
+		-- 1st -> 5, 2nd -> 4, 3rd -> 3, 4th -> 2, 5th -> 1
+		stopPoint = stopPoints[6 - index]
 	end
 
 	if not stopPoint then
@@ -267,11 +270,7 @@ function ConveyorService:SpawnItem(player, plot)
 
 	local conveyorLevel = plot:GetAttribute("ConveyorLevel")
 
-	local spawnCount = multipleMannequin and maxMannequins or 1
-
-	local spawnedMannequins = {}
-
-	for i = 1, spawnCount do
+	for i = 1, mannequinCount do
 
 		local rarity = ItemRollService:RollRarity(conveyorLevel)
 		local mutation = ItemRollService:RollMutation()
