@@ -1,15 +1,20 @@
 local TweenService = game:GetService("TweenService")
 local CollectionService = game:GetService("CollectionService")
 local ServerScriptService = game:GetService("ServerScriptService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local ConveyorService = require(ServerScriptService.Server.Services.ConveyorService)
+local Tags = require(ReplicatedStorage.Shared.Tags)
+
+local PortalService = require(ServerScriptService.Server.Services.PortalService)
 local PlotService = require(ServerScriptService.Server.Services.PlotService)
 
-local SpawnButtons = CollectionService:GetTagged("ConveyorSpawnButton")
+
+local SpawnButtons = CollectionService:GetTagged(Tags.PortalSpawnButton)
 
 local buttonDebounce = {}
 
-local BUTTON_COOLDOWN = 1
+--2 (Normal) | 4 (With gamepass)
+local BUTTON_COOLDOWN = 2 
 
 local function pressButton(button)
 
@@ -54,7 +59,7 @@ for _, button in ipairs(SpawnButtons) do
 			local plot = PlotService:GetPlayerPlot(player)
 			if plot then
 				
-				ConveyorService:SpawnItem(player, plot)
+				PortalService:SpawnItem(player, plot)
 			end
 
 			pressButton(button)

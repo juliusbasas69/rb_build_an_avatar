@@ -2,27 +2,53 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local DataService = require(ServerScriptService.Server.Services.DataStoreService)
-local UserDatabase = require(ReplicatedStorage.Shared.Modules.UserDatabase)
+local PlayerData = require(ReplicatedStorage.Shared.Data.PlayerData)
+local OwnedMannequinData = require(ReplicatedStorage.Shared.Data.OwnedMannequinData)
 
 local PlayerCache = {}
 
 local UserService = {}
+
+local function DeepClone(tbl)
+	local clone = {}
+
+	for key, value in pairs(tbl) do
+		if type(value) == "table" then
+			clone[key] = DeepClone(value)
+		else
+			clone[key] = value
+		end
+	end
+
+	return clone
+end
 
 function UserService:UserInitial(player)
 
 	if not player then
 		return nil
 	end
-    print(player)
 
 	local data = DataService:GetUser(player)
 
 	if not data then
-		data = table.clone(UserDatabase)
+
+		print("FVK")
+
+		data = DeepClone(PlayerData)
+
+		local starterMannequin = table.clone(OwnedMannequinData)
+		starterMannequin.Id = "MNR6"
+		starterMannequin.Quantity = 1
+
+		data.OwnedMannequins["MNR6"] = starterMannequin
+
 		DataService:SaveUser(player, data)
 	end
 
 	PlayerCache[player] = data
+
+	print(PlayerCache[player])
 
 	return data
 end

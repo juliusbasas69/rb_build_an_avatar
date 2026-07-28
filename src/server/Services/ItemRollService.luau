@@ -1,11 +1,11 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local ItemDatabase = require(ReplicatedStorage.Shared.Modules.ItemDatabase)
-local MutationDatabase = require(ReplicatedStorage.Shared.Modules.MutationDatabase)
-local RarityDatabase = require(ReplicatedStorage.Shared.Modules.RarityDatabase)
-local ConveyorLevelDatabase = require(ReplicatedStorage.Shared.Modules.ConveyorLevelDatabase)
-local LuckMultiplierDatabase = require(ReplicatedStorage.Shared.Modules.LuckMultiplierDatabase)
-local MutationLuckMultiplierDatabase = require(ReplicatedStorage.Shared.Modules.MutationLuckMultiplierDatabase)
+local AssetsDatabase = require(ReplicatedStorage.Shared.Databases.AssetsDatabase)
+local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
+local RarityDatabase = require(ReplicatedStorage.Shared.Databases.RarityDatabase)
+local PortalLevelDatabase = require(ReplicatedStorage.Shared.Databases.PortalLevelDatabase)
+local LuckMultiplierDatabase = require(ReplicatedStorage.Shared.Databases.LuckMultiplierDatabase)
+local MutationLuckMultiplierDatabase = require(ReplicatedStorage.Shared.Databases.MutationLuckMultiplierDatabase)
 
 local ItemsByRarity = {}
 
@@ -15,13 +15,13 @@ local mutationLuck = 1
 
 local ItemRollService = {}
 
-for _, item in pairs(ItemDatabase) do
+for _, item in pairs(AssetsDatabase) do
 	ItemsByRarity[item.Rarity] = ItemsByRarity[item.Rarity] or {}
 	table.insert(ItemsByRarity[item.Rarity], item)
 end
 
-function ItemRollService:GetLootTable(conveyorLevel)
-	return ConveyorLevelDatabase[tonumber(conveyorLevel)]
+function ItemRollService:GetLootTable(portalLevel)
+	return PortalLevelDatabase[tonumber(portalLevel)]
 end
 
 function ItemRollService:ApplyLuck(rarity, weight, luck)
@@ -44,12 +44,12 @@ function ItemRollService:ApplyMutationLuck(mutation, chance, luck)
 
 end
 
-function ItemRollService:RollRarity(conveyorLevel)
+function ItemRollService:RollRarity(portalLevel)
 
-	local lootTable = self:GetLootTable(conveyorLevel)
+	local lootTable = self:GetLootTable(portalLevel)
 
 	if not lootTable then
-		warn("No loot table found for level:", conveyorLevel)
+		warn("No loot table found for level:", portalLevel)
 		return nil
 	end
 

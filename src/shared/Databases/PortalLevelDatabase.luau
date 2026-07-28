@@ -1,4 +1,4 @@
-local ConveyorLootTable = {
+local PortalLevelDatabase = {
 	[1] = {
 		Common = 75,
 		Uncommon = 20,
@@ -130,4 +130,4 @@ local ConveyorLootTable = {
 	},
 }
 
-return ConveyorLootTable
+return PortalLevelDatabase

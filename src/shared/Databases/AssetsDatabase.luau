@@ -1,4 +1,4 @@
-local ItemDatabase = {
+local AssetsDatabase = {
 	-- Common
 	green_jersey = {
 		Name = "Green Jersey",
@@ -818,14 +818,6 @@ local ItemDatabase = {
 		Income = 120000000,
 		Rarity = "Secret",
 	},
-	developer_headset = {
-		Name = "The Origin",
-		AssetId = 1028828,
-		Type = "Hat",
-		Price = 100000000000,
-		Income = 120000000,
-		Rarity = "Secret",
-	},
 }
 
-return ItemDatabase
+return AssetsDatabase

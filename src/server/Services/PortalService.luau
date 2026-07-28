@@ -5,8 +5,8 @@ local CollectionService = game:GetService("CollectionService")
 local TweenService = game:GetService("TweenService")
 
 local ItemRollService = require(ServerScriptService.Server.Services.ItemRollService)
-local MutationDatabase = require(ReplicatedStorage.Shared.Modules.MutationDatabase)
-local RarityDatabase = require(ReplicatedStorage.Shared.Modules.RarityDatabase)
+local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
+local RarityDatabase = require(ReplicatedStorage.Shared.Databases.RarityDatabase)
 
 local BaseMannequin = ReplicatedStorage.Models:WaitForChild("BaseMannequin")
 
@@ -16,7 +16,7 @@ local CurrentMannequin = {}
 local mannequinCount = 1
 local speed = 8
 
-local ConveyorService = {}
+local PortalService = {}
 
 local function applyItem(humanoid, item)
 	local description = Instance.new("HumanoidDescription")
@@ -101,7 +101,7 @@ local function moveMannequin(models, lookAt)
 			task.wait((index - 1) * spawnDelay)
 
 			local plot = data.Plot
-			local spawnPoint = plot.Conveyor.SpawnPoint.SpawnPoint
+			local spawnPoint = plot.Portal.SpawnPoint.SpawnPoint
 
 			local mannequin = BaseMannequin:Clone()
 			mannequin.Parent = plot
@@ -216,7 +216,7 @@ local function displayItem(item, mutation, plot, index)
 
 	CurrentMannequin[plot] = CurrentMannequin[plot] or {}
 
-	local stopPoints = plot.Conveyor.StopPoints:GetChildren()
+	local stopPoints = plot.Portal.StopPoints:GetChildren()
 
 	table.sort(stopPoints, function(a, b)
 		return tonumber(a.Name) < tonumber(b.Name)
@@ -255,9 +255,9 @@ end
 
 
 
-function ConveyorService:SpawnItem(player, plot)
+function PortalService:SpawnItem(player, plot)
 
-	local destroyPoint = plot.Conveyor.DestroyPoint.DestroyPoint
+	local destroyPoint = plot.Portal.DestroyPoint.DestroyPoint
 
 	
 
@@ -268,11 +268,11 @@ function ConveyorService:SpawnItem(player, plot)
 	table.clear(CurrentMannequin[plot])
 
 
-	local conveyorLevel = plot:GetAttribute("ConveyorLevel")
+	local portalLevel = plot:GetAttribute("PortalLevel")
 
 	for i = 1, mannequinCount do
 
-		local rarity = ItemRollService:RollRarity(conveyorLevel)
+		local rarity = ItemRollService:RollRarity(portalLevel)
 		local mutation = ItemRollService:RollMutation()
 
 		local itemPool = ItemRollService:GetItemsByRarity(rarity)
@@ -295,4 +295,4 @@ function ConveyorService:SpawnItem(player, plot)
 
 end
 
-return ConveyorService
+return PortalService

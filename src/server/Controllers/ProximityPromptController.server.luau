@@ -1,8 +1,10 @@
 local CollectionService = game:GetService("CollectionService")
-local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local BUY_ITEM_PROMPT = "BuyItemPrompt"
-local MANNEQUIN_PLATFORM_PROMPT = "MannequinPlatformPrompt"
+local Tags = require(ReplicatedStorage.Shared.Tags)
+local Remotes = require(ReplicatedStorage.Shared.Remotes)
+
+local MannequinSelectorUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.MannequinSelectorUIRemote)
 
 local connectedPrompts = {}
 
@@ -24,18 +26,19 @@ local function handleBuyItemPrompt(player, prompt)
 	print("BUY ITEM PROMPT TRIGGERED BY PLAYER:", player.Name)
 end
 
-for _, prompt in ipairs(CollectionService:GetTagged(BUY_ITEM_PROMPT)) do
+for _, prompt in ipairs(CollectionService:GetTagged(Tags.BuyItemPrompt)) do
 	connectPrompt(prompt, handleBuyItemPrompt)
 end
 
-CollectionService:GetInstanceAddedSignal(BUY_ITEM_PROMPT):Connect(function(prompt)
+CollectionService:GetInstanceAddedSignal(Tags.BuyItemPrompt):Connect(function(prompt)
 	connectPrompt(prompt, handleBuyItemPrompt)
 end)
 
 -- Mannequin Platform Prompt
 
-local function placeMannequin(player, prompt)
-	print("Place mannequin:", player.Name)
+local function openMannequinSelector(player)
+	
+	MannequinSelectorUIRemote:FireClient(player)
 end
 
 local function dressMannequin(player, prompt)
@@ -48,7 +51,7 @@ local function handlePlatformPrompt(player, prompt)
 	if hasMannequin then
 		dressMannequin(player, prompt)
 	else
-		placeMannequin(player, prompt)
+		openMannequinSelector(player)
 	end
 end
 
@@ -60,9 +63,9 @@ local function connectMannequinPlatformPrompt(platform)
 	end)
 end
 
-for _, platform in ipairs(CollectionService:GetTagged(MANNEQUIN_PLATFORM_PROMPT)) do
+for _, platform in ipairs(CollectionService:GetTagged(Tags.MannequinPlatformPrompt)) do
 	connectMannequinPlatformPrompt(platform)
 end
 
 -- Connect future platforms
-CollectionService:GetInstanceAddedSignal(MANNEQUIN_PLATFORM_PROMPT):Connect(connectMannequinPlatformPrompt)
+CollectionService:GetInstanceAddedSignal(Tags.MannequinPlatformPrompt):Connect(connectMannequinPlatformPrompt)

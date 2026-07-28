@@ -107,7 +107,8 @@ function PlotService:AssignPlot(player)
 	plot:SetAttribute("Occupied", true)
 	plot:SetAttribute("OwnerId", player.UserId)
 	plot:SetAttribute("OwnerName", player.Name)
-	plot:SetAttribute("ConveyorLevel", 5)
+	plot:SetAttribute("PortalLevel", 1)
+	plot:SetAttribute("PortalSpeed", 8)
 
 	-- Cache the player's plot
 	PlayerPlots[player] = plot
@@ -134,7 +135,7 @@ function PlotService:ReleasePlot(player)
 	plot:SetAttribute("Occupied", false)
 	plot:SetAttribute("OwnerId", nil)
 	plot:SetAttribute("OwnerName", nil)
-	plot:SetAttribute("ConveyorLevel", 1)
+	plot:SetAttribute("PortalLevel", 1)
 
 	-- Remove statue
 	local ownerStand = plot:FindFirstChild("OwnerStand")
