@@ -7,14 +7,16 @@ local player = Players.LocalPlayer
 local MainGui = player.PlayerGui:WaitForChild("MainGui")
 
 local OpenSettingsUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.OpenSettingsUIRemote)
-local MannequinSelectorUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.MannequinSelectorUIRemote)
+local OpenMannequinSelectorUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.OpenMannequinSelectorUIRemote)
 
 OpenSettingsUIRemote.OnClientEvent:Connect(function()
 	MainGui.Menu.Visible = false
 	MainGui.PortalSettings.Visible = true
 end)
 
-MannequinSelectorUIRemote.OnClientEvent:Connect(function()
+OpenMannequinSelectorUIRemote.OnClientEvent:Connect(function(platformId)
 	MainGui.Menu.Visible = false
 	MainGui.MannequinSelector.Visible = true
+
+	MainGui.MannequinSelector:SetAttribute("PlatformId", platformId)
 end)

@@ -3,6 +3,7 @@ local Tags = {
 	BuyItemPrompt = "BuyItemPrompt",
 	Mannequin = "Mannequin",
     MannequinPlatformPrompt = "MannequinPlatformPrompt",
+    PlaceMannequinButton = "PlaceMannequinButton",
 	Conveyor = "Conveyor",
 	Plot = "Plot",
 	SpawnPoint = "SpawnPoint",

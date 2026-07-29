@@ -33,13 +33,11 @@ function UserService:UserInitial(player)
 
 	if not data then
 
-		print("FVK")
-
 		data = DeepClone(PlayerData)
 
 		local starterMannequin = table.clone(OwnedMannequinData)
 		starterMannequin.Id = "MNR6"
-		starterMannequin.Quantity = 1
+		starterMannequin.Quantity = 2
 
 		data.OwnedMannequins["MNR6"] = starterMannequin
 
@@ -47,8 +45,6 @@ function UserService:UserInitial(player)
 	end
 
 	PlayerCache[player] = data
-
-	print(PlayerCache[player])
 
 	return data
 end
@@ -62,6 +58,19 @@ function UserService:GetUser(player)
     end
 
     return PlayerCache[player]
+end
+
+function UserService:UpdateUser(player)
+	local data = PlayerCache[player]
+
+	if not data then
+		warn("No cached data found for " .. player.Name)
+		return false
+	end
+
+	--DataService:SaveUser(player, data)
+
+	return true
 end
 
 

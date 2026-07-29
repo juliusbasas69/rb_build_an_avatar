@@ -1,6 +1,7 @@
 local Remotes = {
     OpenSettingsUIRemote = "OpenSettingsUIRemote",
-    MannequinSelectorUIRemote = "MannequinSelectorUIRemote",
+    OpenMannequinSelectorUIRemote = "OpenMannequinSelectorUIRemote",
+    UpdateMannequinSelectorUIRemote = "UpdateMannequinSelectorUIRemote",
 
     PlaceMannequinRemote = "PlaceMannequinRemote",
 }

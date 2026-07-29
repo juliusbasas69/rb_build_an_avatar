@@ -80,11 +80,11 @@ local function updateStatue(player, plot)
 		textLabel.BackgroundTransparency = 1
 		textLabel.RichText = true
 		textLabel.TextScaled = true
-		textLabel.FontFace = Font.new("rbxassetid://12187370000")
 		textLabel.TextWrapped = true
+		textLabel.FontFace = Font.new("rbxassetid://16658221428") -- Fredoka One
 
 		textLabel.Text = string.format(
-			"<font color='#FFD700'><b>👑 OWNER</b></font>\n\n<font color='#FFFFFF'><b>%s</b></font>",
+			"<font color='#FFD700'><b>👑 OWNER</b></font>\n<font color='#FFFFFF'><b>%s</b></font>",
 			player.DisplayName
 		)
 

@@ -1,6 +1,5 @@
 local PlaceMannequinData = {
-    Slot = 0,
-    Mannequin = "",
+    Mannequin = nil,
 
     Outfit = {
         Shirt = "",
