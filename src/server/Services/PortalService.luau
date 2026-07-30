@@ -4,7 +4,7 @@ local CollectionService = game:GetService("CollectionService")
 
 local TweenService = game:GetService("TweenService")
 
-local ItemRollService = require(ServerScriptService.Server.Services.ItemRollService)
+local AssetRollService = require(ServerScriptService.Server.Services.AssetRollService)
 local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
 local RarityDatabase = require(ReplicatedStorage.Shared.Databases.RarityDatabase)
 
@@ -13,12 +13,12 @@ local BaseMannequin = ReplicatedStorage.Models:WaitForChild("BaseMannequin")
 local CurrentMannequin = {}
 
 --THIS IS GAMEPASS
-local mannequinCount = 1
+local mannequinCount = 5
 local speed = 8
 
 local PortalService = {}
 
-local function applyItem(humanoid, item)
+local function applyAsset(humanoid, asset)
 	local description = Instance.new("HumanoidDescription")
 
 	local white = Color3.fromRGB(255, 255, 255)
@@ -30,26 +30,26 @@ local function applyItem(humanoid, item)
 	description.LeftLegColor = white
 	description.RightLegColor = white
 
-	if item.Type == "Shirt" then
-		description.Shirt = item.AssetId
+	if asset.Type == "Shirt" then
+		description.Shirt = asset.AssetId
 
-	elseif item.Type == "Pants" then
-		description.Pants = item.AssetId
+	elseif asset.Type == "Pants" then
+		description.Pants = asset.AssetId
 
-	elseif item.Type == "Back" then
-		description.BackAccessory = tostring(item.AssetId)
+	elseif asset.Type == "Back" then
+		description.BackAccessory = tostring(asset.AssetId)
 
-	elseif item.Type == "Hat" then
-		description.HatAccessory = tostring(item.AssetId)
+	elseif asset.Type == "Hat" then
+		description.HatAccessory = tostring(asset.AssetId)
 
-	elseif item.Type == "Hair" then
-		description.HairAccessory = tostring(item.AssetId)
+	elseif asset.Type == "Hair" then
+		description.HairAccessory = tostring(asset.AssetId)
 	
-	elseif item.Type == "Face" then
-		description.FaceAccessory = tostring(item.AssetId)
+	elseif asset.Type == "Face" then
+		description.FaceAccessory = tostring(asset.AssetId)
 	
-	elseif item.Type == "Head" then
-		description.Head = tostring(item.AssetId)	
+	elseif asset.Type == "Head" then
+		description.Head = tostring(asset.AssetId)	
 	end
 	
 
@@ -63,7 +63,7 @@ local function applyItem(humanoid, item)
 	end
 end
 
-local function updateMannequinInfo(mannequin, item, mutation)
+local function updateMannequinInfo(mannequin, asset, mutation)
 	local head = mannequin:FindFirstChild("Head")
 
 	if head then
@@ -73,24 +73,26 @@ local function updateMannequinInfo(mannequin, item, mutation)
 		local rarityLabel = info:WaitForChild("Rarity")
 		local nameLabel = info:WaitForChild("Name")
 		local costLabel = info:WaitForChild("Cost")
+	
+		mannequin:SetAttribute("AssetId", asset.AssetId)
 
 		mutationLabel.Text = mutation
 		mutationLabel.TextColor3 = MutationDatabase[mutation].Color or Color3.new(1, 1, 1)
 		CollectionService:AddTag(mutationLabel, mutation)
 
-		rarityLabel.Text = item.Rarity
-		rarityLabel.TextColor3 = RarityDatabase[item.Rarity].Color
-		CollectionService:AddTag(rarityLabel, item.Rarity)
+		rarityLabel.Text = asset.Rarity
+		rarityLabel.TextColor3 = RarityDatabase[asset.Rarity].Color
+		CollectionService:AddTag(rarityLabel, asset.Rarity)
 
-		nameLabel.Text = item.Name
+		nameLabel.Text = asset.Name
 		nameLabel.TextColor3 = Color3.new(1, 1, 1)
 
-		costLabel.Text = "$" .. math.floor(item.Price * MutationDatabase[mutation].CostMultiplier)
+		costLabel.Text = "$" .. math.floor(asset.Price * MutationDatabase[mutation].CostMultiplier)
 		costLabel.TextColor3 = Color3.fromRGB(255, 223, 0)
 	end
 end
 
-local function moveMannequin(models, lookAt)
+local function moveMannequin(models)
 
 	for index, data in ipairs(models) do
 
@@ -105,19 +107,19 @@ local function moveMannequin(models, lookAt)
 
 			local mannequin = BaseMannequin:Clone()
 			mannequin.Parent = plot
-			mannequin:PivotTo(spawnPoint.CFrame)
+			mannequin:PivotTo(spawnPoint.CFrame * CFrame.Angles(0, math.rad(180), 0))
 
 			local humanoid = mannequin:WaitForChild("Humanoid")
 
 			-- Apply avatar first
-			applyItem(humanoid, data.Item)
+			applyAsset(humanoid, data.Asset)
 
 			-- Wait until Roblox finishes loading accessories/clothes
 			task.wait(0.2)
 
 			updateMannequinInfo(
 				mannequin,
-				data.Item,
+				data.Asset,
 				data.Mutation
 			)
 
@@ -142,29 +144,12 @@ local function moveMannequin(models, lookAt)
 
 			local prompt = Instance.new("ProximityPrompt")
 			prompt.ActionText = "Buy"
-			prompt.ObjectText = data.Item.Name
+			prompt.ObjectText = data.Asset.Name
 			prompt.KeyboardKeyCode = Enum.KeyCode.E
 			prompt.MaxActivationDistance = 10
 			prompt.RequiresLineOfSight = false
 			prompt.Parent = mannequin:WaitForChild("HumanoidRootPart")
-			prompt.HoldDuration = 2
-			CollectionService:AddTag(prompt, "BuyItemPrompt")
-
-
-			if lookAt and mannequin.Parent then
-
-				local target = Vector3.new(
-					lookAt.Position.X,
-					rootPart.Position.Y,
-					lookAt.Position.Z
-				)
-
-				rootPart.CFrame = CFrame.lookAt(
-					rootPart.Position,
-					target
-				)
-			end
-
+			CollectionService:AddTag(prompt, "BuyAssetPrompt")
 
 			data.Model = mannequin
 
@@ -174,7 +159,6 @@ local function moveMannequin(models, lookAt)
 
 end
 
-
 local function destroyMannequin(models, destroyPoint)
 
 	for _, data in ipairs(models) do 
@@ -183,7 +167,13 @@ local function destroyMannequin(models, destroyPoint)
 
 			local mannequin = data.Model
 
+			task.wait(0.1)
 			local rootPart = mannequin:WaitForChild("HumanoidRootPart")
+
+			if not rootPart then
+				warn("HumanoidRootPart missing:", mannequin:GetFullName())
+				return
+			end
 
 			local distance = (rootPart.Position - destroyPoint.Position).Magnitude
 			local duration = distance / speed
@@ -209,10 +199,7 @@ local function destroyMannequin(models, destroyPoint)
 
 end
 
-
-
-
-local function displayItem(item, mutation, plot, index)
+local function displayAsset(asset, mutation, plot, index)
 
 	CurrentMannequin[plot] = CurrentMannequin[plot] or {}
 
@@ -243,7 +230,7 @@ local function displayItem(item, mutation, plot, index)
 	end
 
 	table.insert(CurrentMannequin[plot], {
-		Item = item,
+		Asset = asset,
 		Mutation = mutation,
 		StopPoint = stopPoint,
 		Plot = plot
@@ -251,15 +238,9 @@ local function displayItem(item, mutation, plot, index)
 
 end
 
-
-
-
-
-function PortalService:SpawnItem(player, plot)
+function PortalService:SpawnAsset(player, plot)
 
 	local destroyPoint = plot.Portal.DestroyPoint.DestroyPoint
-
-	
 
 	CurrentMannequin[plot] = CurrentMannequin[plot] or {}
 
@@ -267,22 +248,25 @@ function PortalService:SpawnItem(player, plot)
 
 	table.clear(CurrentMannequin[plot])
 
-
 	local portalLevel = plot:GetAttribute("PortalLevel")
 
 	for i = 1, mannequinCount do
 
-		local rarity = ItemRollService:RollRarity(portalLevel)
-		local mutation = ItemRollService:RollMutation()
+		local rarity = AssetRollService:RollRarity(portalLevel)
+		local mutation = AssetRollService:RollMutation()
 
-		local itemPool = ItemRollService:GetItemsByRarity(rarity)
+		local assetPool = AssetRollService:GetAssetByRarity(rarity)
 
-		local selectedItem = itemPool[
-			Random.new():NextInteger(1, #itemPool)
+		local selectedAsset = assetPool[
+			Random.new():NextInteger(1, #assetPool)
 		]
 
-		displayItem(
-			selectedItem,
+		if not selectedAsset then
+			continue
+		end
+
+		displayAsset(
+			selectedAsset,
 			mutation,
 			plot,
 			i
@@ -291,7 +275,7 @@ function PortalService:SpawnItem(player, plot)
 	end
 
 	-- MOVE ALL ONCE
-	moveMannequin(CurrentMannequin[plot], plot.SpawnButton.Part)
+	moveMannequin(CurrentMannequin[plot])
 
 end
 

@@ -19,8 +19,6 @@ end
 
 local function updateStatue(player, plot)
 	
-	print(plot)
-
 	local ownerStand = plot:FindFirstChild("OwnerStand")
 	if not ownerStand then
 		return

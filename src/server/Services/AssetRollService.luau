@@ -7,24 +7,24 @@ local PortalLevelDatabase = require(ReplicatedStorage.Shared.Databases.PortalLev
 local LuckMultiplierDatabase = require(ReplicatedStorage.Shared.Databases.LuckMultiplierDatabase)
 local MutationLuckMultiplierDatabase = require(ReplicatedStorage.Shared.Databases.MutationLuckMultiplierDatabase)
 
-local ItemsByRarity = {}
+local AssetsByRarity = {}
 
 --THIS IS GAMEPASS
 local playerLuck = 1
 local mutationLuck = 1
 
-local ItemRollService = {}
+local AssetRollService = {}
 
-for _, item in pairs(AssetsDatabase) do
-	ItemsByRarity[item.Rarity] = ItemsByRarity[item.Rarity] or {}
-	table.insert(ItemsByRarity[item.Rarity], item)
+for _, asset in pairs(AssetsDatabase) do
+	AssetsByRarity[asset.Rarity] = AssetsByRarity[asset.Rarity] or {}
+	table.insert(AssetsByRarity[asset.Rarity], asset)
 end
 
-function ItemRollService:GetLootTable(portalLevel)
+function AssetRollService:GetLootTable(portalLevel)
 	return PortalLevelDatabase[tonumber(portalLevel)]
 end
 
-function ItemRollService:ApplyLuck(rarity, weight, luck)
+function AssetRollService:ApplyLuck(rarity, weight, luck)
 
 	local multiplier = LuckMultiplierDatabase[rarity] or 0
 
@@ -34,7 +34,7 @@ function ItemRollService:ApplyLuck(rarity, weight, luck)
 
 end
 
-function ItemRollService:ApplyMutationLuck(mutation, chance, luck)
+function AssetRollService:ApplyMutationLuck(mutation, chance, luck)
 
 	local multiplier = MutationLuckMultiplierDatabase[mutation] or 0
 
@@ -44,7 +44,7 @@ function ItemRollService:ApplyMutationLuck(mutation, chance, luck)
 
 end
 
-function ItemRollService:RollRarity(portalLevel)
+function AssetRollService:RollRarity(portalLevel)
 
 	local lootTable = self:GetLootTable(portalLevel)
 
@@ -83,11 +83,11 @@ function ItemRollService:RollRarity(portalLevel)
 	end
 end
 
-function ItemRollService:GetItemsByRarity(rarity)
-	return ItemsByRarity[rarity] or {}
+function AssetRollService:GetAssetByRarity(rarity)
+	return AssetsByRarity[rarity] or {}
 end
 
-function ItemRollService:RollMutation()
+function AssetRollService:RollMutation()
 	local adjustedTable = {}
 	local totalChance = 0
 
@@ -119,4 +119,4 @@ function ItemRollService:RollMutation()
 	end
 end
 
-return ItemRollService
+return AssetRollService

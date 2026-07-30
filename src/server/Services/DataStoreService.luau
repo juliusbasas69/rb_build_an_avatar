@@ -6,8 +6,6 @@ local DataService = {}
 
 function DataService:GetUser(player)
 
-    print(player)
-
     local success, data = pcall(function(...)
         return PlayerData:GetAsync(player)
     end)

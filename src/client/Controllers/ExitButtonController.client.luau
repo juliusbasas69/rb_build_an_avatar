@@ -12,7 +12,7 @@ local function ConnectExitButton(exitButton)
         local PlayerGui = Player:WaitForChild("PlayerGui")
         local MainGui = PlayerGui:WaitForChild("MainGui")
 
-		exitButton.Parent.Visible = false
+		exitButton.Parent.Parent.Visible = false
 		
 		MainGui.Menu.Visible = true
 	end)

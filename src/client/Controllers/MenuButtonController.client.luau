@@ -3,8 +3,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local player = Players.LocalPlayer
-local PlayerGui = player:WaitForChild("PlayerGui")
-local MainGui = PlayerGui:WaitForChild("MainGui")
+local GetMainGui = require(
+	player:WaitForChild("PlayerScripts")
+		:WaitForChild("Client")
+		:WaitForChild("Shared")
+		:WaitForChild("GetMainGui")
+)
+
+local MainGui = GetMainGui()
 
 local Tags = require(ReplicatedStorage.Shared.Tags)
 
@@ -13,9 +19,11 @@ local function ConnectMenuButton(menuButton)
 		
 		if menuButton.Name == "StatsButton" then
 			MainGui.Stats.Visible = true
+		elseif menuButton.Name == "ItemsButton" then
+			MainGui.Items.Visible = true
 		end
 		
-		menuButton.Parent.Parent.Visible = not menuButton.Parent.Parent.Visible
+		menuButton.Parent.Visible = false
 
 	end)
 end

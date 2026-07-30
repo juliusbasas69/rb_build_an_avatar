@@ -12,20 +12,27 @@ local UpdateMannequinSelectorUIRemote = ReplicatedStorage.Remotes:WaitForChild(R
 local mannequins = ReplicatedStorage:WaitForChild("Mannequins")
 
 local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-local mainGui = playerGui:WaitForChild("MainGui")
+local GetMainGui = require(
+	player:WaitForChild("PlayerScripts")
+		:WaitForChild("Client")
+		:WaitForChild("Shared")
+		:WaitForChild("GetMainGui")
+)
+
+local MainGui = GetMainGui()
 
 local template
 local hasMannequins = false
 
 for _, instance in ipairs(CollectionService:GetTagged(Tags.MannequinDisplay)) do
-	if instance:IsDescendantOf(mainGui) then
+	if instance:IsDescendantOf(MainGui) then
 		template = instance
 		break
 	end
 end
 
 local function cloneFrame(ownedMannequin, mannequin)
+
 	local frame = template:Clone()
 	CollectionService:RemoveTag(frame, Tags.MannequinDisplay)
 
@@ -62,8 +69,6 @@ local function cloneFrame(ownedMannequin, mannequin)
 	end)
 
 	local outerStroke = frame:WaitForChild("Outer")
-	local innerStroke = frame:WaitForChild("Inner")
-	local gradient = innerStroke:WaitForChild("UIGradient")
 
 	local normalColor = outerStroke.Color
 	local hoverColor = Color3.fromRGB(27, 254, 15)
@@ -74,46 +79,30 @@ local function cloneFrame(ownedMannequin, mannequin)
 		Enum.EasingDirection.Out
 	)
 
-	local colorValue = Instance.new("Color3Value")
-	colorValue.Value = normalColor
-
-	colorValue:GetPropertyChangedSignal("Value"):Connect(function()
-		gradient.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, colorValue.Value),
-			ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
-		})
-	end)
-
 	frame.MouseEnter:Connect(function()
 		TweenService:Create(outerStroke, tweenInfo, {
-			Color = hoverColor
-		}):Play()
-
-		TweenService:Create(colorValue, tweenInfo, {
-			Value = hoverColor
+			Color = hoverColor,
+			Transparency = 0
 		}):Play()
 	end)
 
 	frame.MouseLeave:Connect(function()
 		TweenService:Create(outerStroke, tweenInfo, {
-			Color = normalColor
-		}):Play()
-
-		TweenService:Create(colorValue, tweenInfo, {
-			Value = normalColor
+			Color = normalColor,
+			Transparency = 1
 		}):Play()
 	end)
 
 	frame.MouseButton1Click:Connect(function()
 
-		local platformId = mainGui.MannequinSelector:GetAttribute("PlatformId")
+		local platformId = MainGui.MannequinSelector:GetAttribute("PlatformId")
 
 		PlaceMannequinRemote:FireServer(mannequin.Name, platformId)
 	end)
 end
 
 local function displayNoMannequins()
-	local scrollingFrame = mainGui.MannequinSelector:FindFirstChild("ScrollingFrame", true)
+	local scrollingFrame = MainGui.MannequinSelector:FindFirstChild("ScrollingFrame", true)
 
 	if #player.PlayerData.OwnedMannequins:GetChildren() > 0 then
 		return
@@ -147,13 +136,12 @@ UpdateMannequinSelectorUIRemote.OnClientEvent:Connect(function(mannequinId)
 	else
 		frame:Destroy()
 
-		print(#ownedMannequins:GetChildren())
 		if #ownedMannequins:GetChildren() == 0 then
 			displayNoMannequins()
 		end
 	end
 
-	mainGui.MannequinSelector.Visible = false
+	MainGui.MannequinSelector.Visible = false
 end)
 
 local function displayAllInitial()
@@ -165,7 +153,7 @@ local function displayAllInitial()
 		local mannequin = mannequins:FindFirstChild(ownedMannequin.Name)
 
 		if mannequin then
-			hasMannequins = true
+			--hasMannequins = true
 
 			cloneFrame(ownedMannequin, mannequin)
 		end

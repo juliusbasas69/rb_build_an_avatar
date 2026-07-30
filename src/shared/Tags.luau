@@ -1,6 +1,6 @@
 local Tags = {
 	ExitButton = "ExitButton",
-	BuyItemPrompt = "BuyItemPrompt",
+	BuyAssetPrompt = "BuyAssetPrompt",
 	Mannequin = "Mannequin",
     MannequinPlatformPrompt = "MannequinPlatformPrompt",
     PlaceMannequinButton = "PlaceMannequinButton",

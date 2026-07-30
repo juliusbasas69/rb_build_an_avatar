@@ -20,12 +20,16 @@ end
 
 local function handleBuyItemPrompt(player, prompt)
 	print("BUY ITEM PROMPT TRIGGERED BY PLAYER:", player.Name)
+
+	print(prompt.Parent.Parent:GetAttribute("AssetId"))
+
+	print(prompt.Parent.Parent:Destroy())
 end
 
-for _, prompt in ipairs(CollectionService:GetTagged(Tags.BuyItemPrompt)) do
+for _, prompt in ipairs(CollectionService:GetTagged(Tags.BuyAssetPrompt)) do
 	connectPrompt(prompt, handleBuyItemPrompt)
 end
 
-CollectionService:GetInstanceAddedSignal(Tags.BuyItemPrompt):Connect(function(prompt)
+CollectionService:GetInstanceAddedSignal(Tags.BuyAssetPrompt):Connect(function(prompt)
 	connectPrompt(prompt, handleBuyItemPrompt)
 end)

@@ -59,7 +59,7 @@ for _, button in ipairs(SpawnButtons) do
 			local plot = PlotService:GetPlayerPlot(player)
 			if plot then
 				
-				PortalService:SpawnItem(player, plot)
+				PortalService:SpawnAsset(player, plot)
 			end
 
 			pressButton(button)

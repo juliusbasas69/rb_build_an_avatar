@@ -76,7 +76,7 @@ local function dressMannequin(player, prompt)
 end
 
 local function connectPlaceMannequinButton(platform)
-	local clickDetector = platform:FindFirstChild("ClickDetector", true)
+	local clickDetector = platform.PlaceMannequin:FindFirstChild("ClickDetector", true)
 
 	if not clickDetector then
 		warn("ClickDetector not found for", platform:GetFullName())
@@ -94,7 +94,7 @@ end
 
 for _, button in ipairs(CollectionService:GetTagged(Tags.PlaceMannequinButton)) do
 
-    local platform = button.Parent.Platform
+    local platform = button.Parent
 
 	connectPlaceMannequinButton(platform)
 end
@@ -113,8 +113,6 @@ PlaceMannequinRemote.OnServerEvent:Connect(function(player, mannequinId, platfor
     end
 
     local playerData = UserService:GetUser(player)
-
-    print(playerData)
 
     if not playerData.OwnedMannequins[mannequinId] then
         warn(player.Name .. " tried to place a mannequin they don't own.")
