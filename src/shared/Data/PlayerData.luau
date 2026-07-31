@@ -1,5 +1,5 @@
 local PlayerData = {
-    Gold = 100,
+    Gold = 999999999,
 
     PortalLevel = 1,
     PortalSpeed = 8,

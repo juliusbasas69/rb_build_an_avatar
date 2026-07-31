@@ -8,20 +8,11 @@ Players.PlayerAdded:Connect(function(player)
 
 	local data = UserService:UserInitial(player)
 
-	-- Leaderstats
-	local leaderstats = Instance.new("Folder")
-	leaderstats.Name = "leaderstats"
-	leaderstats.Parent = player
-
-	local gold = Instance.new("NumberValue")
-	gold.Name = "Gold"
-	gold.Value = data.Gold
-	gold.Parent = leaderstats
-
-	-- Replicated player data
 	local playerData = Instance.new("Folder")
 	playerData.Name = "PlayerData"
 	playerData.Parent = player
+
+	playerData:SetAttribute("Gold", data.Gold)
 
 	local ownedMannequins = Instance.new("Folder")
 	ownedMannequins.Name = "OwnedMannequins"
@@ -38,4 +29,8 @@ Players.PlayerAdded:Connect(function(player)
 		quantity.Parent = mannequinFolder
 	end
 
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	UserService:PlayerRemoving(player)
 end)

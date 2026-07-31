@@ -9,6 +9,8 @@ local PlayerCache = {}
 
 local UserService = {}
 
+local AUTOSAVE_INTERVAL = 60
+
 local function DeepClone(tbl)
 	local clone = {}
 
@@ -37,7 +39,7 @@ function UserService:UserInitial(player)
 
 		local starterMannequin = table.clone(OwnedMannequinData)
 		starterMannequin.Id = "MNR6"
-		starterMannequin.Quantity = 2
+		starterMannequin.Quantity = 999
 
 		data.OwnedMannequins["MNR6"] = starterMannequin
 
@@ -68,10 +70,43 @@ function UserService:UpdateUser(player)
 		return false
 	end
 
-	--DataService:SaveUser(player, data)
-
 	return true
 end
+
+function UserService:PlayerRemoving(player)
+	local data = PlayerCache[player]
+
+	if data then
+		local success, err = pcall(function()
+			DataService:SaveUser(player, data)
+		end)
+
+		if not success then
+			warn(("Failed to save %s: %s"):format(player.Name, err))
+		end
+
+		PlayerCache[player] = nil
+	end
+end
+
+task.spawn(function()
+	while true do
+		task.wait(AUTOSAVE_INTERVAL)
+
+		for player, data in pairs(PlayerCache) do
+			if player.Parent then
+				local success, err = pcall(function()
+					DataService:SaveUser(player, data)
+				end)
+
+				if not success then
+					warn(("Failed to autosave %s: %s"):format(player.Name, err))
+				end
+			end
+		end
+	end
+end)
+
 
 
 return UserService

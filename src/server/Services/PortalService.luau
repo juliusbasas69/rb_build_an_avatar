@@ -75,6 +75,7 @@ local function updateMannequinInfo(mannequin, asset, mutation)
 		local costLabel = info:WaitForChild("Cost")
 	
 		mannequin:SetAttribute("AssetId", asset.AssetId)
+		mannequin:SetAttribute("Mutation", mutation)
 
 		mutationLabel.Text = mutation
 		mutationLabel.TextColor3 = MutationDatabase[mutation].Color or Color3.new(1, 1, 1)

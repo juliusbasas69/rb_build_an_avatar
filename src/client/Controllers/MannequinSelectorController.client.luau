@@ -142,6 +142,7 @@ UpdateMannequinSelectorUIRemote.OnClientEvent:Connect(function(mannequinId)
 	end
 
 	MainGui.MannequinSelector.Visible = false
+	MainGui.Menu.Visible = true
 end)
 
 local function displayAllInitial()
