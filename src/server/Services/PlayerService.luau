@@ -7,7 +7,7 @@ local OwnedMannequinData = require(ReplicatedStorage.Shared.Data.OwnedMannequinD
 
 local PlayerCache = {}
 
-local UserService = {}
+local PlayerService = {}
 
 local AUTOSAVE_INTERVAL = 60
 
@@ -25,13 +25,13 @@ local function DeepClone(tbl)
 	return clone
 end
 
-function UserService:UserInitial(player)
+function PlayerService:UserInitial(player)
 
 	if not player then
 		return nil
 	end
 
-	local data = DataService:GetUser(player)
+	local data = DataService:GetPlayer(player)
 
 	if not data then
 
@@ -43,7 +43,7 @@ function UserService:UserInitial(player)
 
 		data.OwnedMannequins["MNR6"] = starterMannequin
 
-		DataService:SaveUser(player, data)
+		DataService:SavePlayer(player, data)
 	end
 
 	PlayerCache[player] = data
@@ -51,10 +51,10 @@ function UserService:UserInitial(player)
 	return data
 end
 
-function UserService:GetUser(player)
+function PlayerService:GetPlayer(player)
 
     if not PlayerCache[player] then
-        local data = DataService:GetUser(player)
+        local data = DataService:GetPlayer(player)
 
         PlayerCache[player] = data
     end
@@ -62,7 +62,7 @@ function UserService:GetUser(player)
     return PlayerCache[player]
 end
 
-function UserService:UpdateUser(player)
+function PlayerService:UpdatePlayer(player)
 	local data = PlayerCache[player]
 
 	if not data then
@@ -73,12 +73,12 @@ function UserService:UpdateUser(player)
 	return true
 end
 
-function UserService:PlayerRemoving(player)
+function PlayerService:PlayerRemoving(player)
 	local data = PlayerCache[player]
 
 	if data then
 		local success, err = pcall(function()
-			DataService:SaveUser(player, data)
+			DataService:SavePlayer(player, data)
 		end)
 
 		if not success then
@@ -96,7 +96,7 @@ task.spawn(function()
 		for player, data in pairs(PlayerCache) do
 			if player.Parent then
 				local success, err = pcall(function()
-					DataService:SaveUser(player, data)
+					DataService:SavePlayer(player, data)
 				end)
 
 				if not success then
@@ -109,4 +109,4 @@ end)
 
 
 
-return UserService
+return PlayerService

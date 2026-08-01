@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local MannequinDatabase = require(ReplicatedStorage.Shared.Databases.MannequinsDatabase)
-local UserService = require(ServerScriptService.Server.Services.UserService)
+local PlayerService = require(ServerScriptService.Server.Services.PlayerService)
 local PlotService = require(ServerScriptService.Server.Services.PlotService)
 local MannequinService = require(ServerScriptService.Server.Services.MannequinService)
 
@@ -26,7 +26,7 @@ PlaceMannequinRemote.OnServerEvent:Connect(function(player, mannequinId, platfor
         return
     end
 
-    local playerData = UserService:GetUser(player)
+    local playerData = PlayerService:GetPlayer(player)
 
     if not playerData.OwnedMannequins[mannequinId] then
         warn(player.Name .. " tried to place a mannequin they don't own.")
@@ -63,6 +63,6 @@ PlaceMannequinRemote.OnServerEvent:Connect(function(player, mannequinId, platfor
         end
     end
 
-    UserService:UpdateUser(player)
+    PlayerService:UpdatePlayer(player)
     UpdateMannequinSelectorUIRemote:FireClient(player, mannequinId)
 end)

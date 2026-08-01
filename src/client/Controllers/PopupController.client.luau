@@ -5,7 +5,7 @@ local Players = game:GetService("Players")
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local PopupUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.PopupUIRemote)
-local PopupUIBindable = ReplicatedStorage.BindableEvent:WaitForChild(Remotes.PopupUIBindable)
+local PopupUIBindable = ReplicatedStorage.Remotes.BindableEvents:WaitForChild(Remotes.PopupUIBindable)
 
 local player = Players.LocalPlayer
 

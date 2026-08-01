@@ -1,12 +1,12 @@
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local UserService = require(ServerScriptService.Server.Services.UserService)
+local PlayerService = require(ServerScriptService.Server.Services.PlayerService)
 
 local Players = game:GetService("Players")
 
 Players.PlayerAdded:Connect(function(player)
 
-	local data = UserService:UserInitial(player)
+	local data = PlayerService:UserInitial(player)
 
 	local playerData = Instance.new("Folder")
 	playerData.Name = "PlayerData"
@@ -32,5 +32,5 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 Players.PlayerRemoving:Connect(function(player)
-	UserService:PlayerRemoving(player)
+	PlayerService:PlayerRemoving(player)
 end)

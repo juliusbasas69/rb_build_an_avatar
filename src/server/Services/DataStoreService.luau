@@ -4,7 +4,7 @@ local PlayerData = DataStoreService:GetDataStore("PlayerData")
 
 local DataService = {}
 
-function DataService:GetUser(player)
+function DataService:GetPlayer(player)
 
     local success, data = pcall(function(...)
         return PlayerData:GetAsync(player)
@@ -18,7 +18,7 @@ function DataService:GetUser(player)
     return nil
 end
 
-function DataService:SaveUser(player, data)
+function DataService:SavePlayer(player, data)
 
     local success, err = pcall(function(...)
         PlayerData:SetAsync(player, data)

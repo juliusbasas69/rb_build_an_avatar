@@ -1,5 +1,5 @@
 local AssetData = {
-    Id = "",
+    AssetId = "",
     Name = "",
     Quantity = 0,
     Rarity = "",

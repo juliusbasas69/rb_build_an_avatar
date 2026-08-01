@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Messages = require(ReplicatedStorage.Shared.Messages)
-local UserService = require(ServerScriptService.Server.Services.UserService)
+local PlayerService = require(ServerScriptService.Server.Services.PlayerService)
 local AssetDatabase = require(ReplicatedStorage.Shared.Databases.AssetsDatabase)
 local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
 
@@ -11,6 +11,7 @@ local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationData
 local AssetData = require(ReplicatedStorage.Shared.Data.AssetData)
 
 local PopupUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.PopupUIRemote)
+local InventoryUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateInventoryUIRemote)
 
 local AssetService = {}
 
@@ -29,7 +30,7 @@ function AssetService:BuyAsset(player, mannequin)
 		return false
 	end
 
-	local playerData = UserService:GetUser(player)
+	local playerData = PlayerService:GetPlayer(player)
 	local asset = AssetDatabase[assetId]
 
 	if not asset then
@@ -54,9 +55,12 @@ function AssetService:BuyAsset(player, mannequin)
 
     local ownedAsset = playerData.Assets[key]
 
+    local IsNew = false
+
     if ownedAsset then
         ownedAsset.Quantity += 1
     else
+        IsNew = true
         ownedAsset = table.clone(AssetData)
         ownedAsset.AssetId = assetId
         ownedAsset.Name = asset.Name
@@ -70,9 +74,14 @@ function AssetService:BuyAsset(player, mannequin)
 
 	mannequin:Destroy()
 
-    UserService:UpdateUser(player)
+    PlayerService:UpdatePlayer(player)
 
     PopupUIRemote:FireClient(player, Messages.PurchaseSuccess)
+    InventoryUIRemote:FireClient(player, {
+        Action = IsNew and "Add" or "Update",
+        AssetId = assetId,
+        Data = ownedAsset
+    })
 
 	return true
 end
