@@ -15,6 +15,7 @@ local MainGui = GetMainGui()
 
 local OpenSettingsUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.OpenSettingsUIRemote)
 local OpenMannequinSelectorUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.OpenMannequinSelectorUIRemote)
+local OpenMannequinCustomizationUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.OpenMannequinCustomizationUIRemote)
 
 OpenSettingsUIRemote.OnClientEvent:Connect(function()
 	MainGui.Menu.Visible = false
@@ -26,4 +27,12 @@ OpenMannequinSelectorUIRemote.OnClientEvent:Connect(function(platformId)
 	MainGui.MannequinSelector.Visible = true
 
 	MainGui.MannequinSelector:SetAttribute("PlatformId", platformId)
+end)
+
+OpenMannequinCustomizationUIRemote.OnClientEvent:Connect(function(mannequinId, platformId)
+    MainGui.Menu.Visible = false
+    MainGui.MannequinCustomization.Visible = true
+
+    MainGui.MannequinCustomization:SetAttribute("MannequinId", mannequinId)
+    MainGui.MannequinCustomization:SetAttribute("PlatformId", platformId)
 end)

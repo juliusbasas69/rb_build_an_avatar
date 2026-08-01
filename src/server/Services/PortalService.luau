@@ -4,6 +4,8 @@ local CollectionService = game:GetService("CollectionService")
 
 local TweenService = game:GetService("TweenService")
 
+local ProximityPromptFactory = require(ServerScriptService.Server.Shared.ProximityPromptFactory)
+
 local AssetRollService = require(ServerScriptService.Server.Services.AssetRollService)
 local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
 local RarityDatabase = require(ReplicatedStorage.Shared.Databases.RarityDatabase)
@@ -143,13 +145,12 @@ local function moveMannequin(models)
 
 			tween.Completed:Wait()
 
-			local prompt = Instance.new("ProximityPrompt")
-			prompt.ActionText = "Buy"
-			prompt.ObjectText = data.Asset.Name
-			prompt.KeyboardKeyCode = Enum.KeyCode.E
-			prompt.MaxActivationDistance = 10
-			prompt.RequiresLineOfSight = false
-			prompt.Parent = mannequin:WaitForChild("HumanoidRootPart")
+			local prompt = ProximityPromptFactory:Create({
+				Parent = mannequin:WaitForChild("HumanoidRootPart"),
+				ActionText = "Buy",
+				ObjectText = data.Asset.Name,
+			})
+
 			CollectionService:AddTag(prompt, "BuyAssetPrompt")
 
 			data.Model = mannequin

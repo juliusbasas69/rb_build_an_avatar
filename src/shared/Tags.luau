@@ -2,8 +2,9 @@ local Tags = {
 	ExitButton = "ExitButton",
 	BuyAssetPrompt = "BuyAssetPrompt",
 	Mannequin = "Mannequin",
-    MannequinPlatformPrompt = "MannequinPlatformPrompt",
-    PlaceMannequinButton = "PlaceMannequinButton",
+    OpenMannequinSelectorUITag = "OpenMannequinSelectorUITag",
+    OpenMannequinCustomizationUITag = "OpenMannequinCustomizationUITag",
+
 	Conveyor = "Conveyor",
 	Plot = "Plot",
 	SpawnPoint = "SpawnPoint",
