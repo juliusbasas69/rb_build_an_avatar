@@ -68,7 +68,7 @@ local function cloneFrame(ownedMannequin, mannequin)
 		rig:PivotTo(startPivot * CFrame.Angles(0, angle, 0))
 	end)
 
-	local outerStroke = frame:WaitForChild("Outer")
+	local outerStroke = frame:WaitForChild("UIStroke")
 
 	local normalColor = outerStroke.Color
 	local hoverColor = Color3.fromRGB(27, 254, 15)

@@ -1,4 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CollectionService = game:GetService("CollectionService")
+local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -33,12 +35,22 @@ local ListFrame = InventoryFrame:WaitForChild("ListFrame")
 
 local template = ListFrame:WaitForChild("Template")
 
-local NextButton = InventoryFrame:WaitForChild("NextButton")
-local PrevButton = InventoryFrame:WaitForChild("PrevButton")
 local StatusLabel = ListFrame:WaitForChild("StatusLabel")
-local PageLabel = InventoryFrame:WaitForChild("PageLabel")
-local MaximumLabel = InventoryFrame:WaitForChild("MaximumLabel")
+local CapacityLabel = InventoryFrame:WaitForChild("CapacityFrame"):WaitForChild("CapacityLabel")
 
+local DetailsFrame = InventoryGui:WaitForChild("DetailsFrame")
+
+local DetailsRarityLabel = DetailsFrame:WaitForChild("RarityLabel")
+local DetailsMutationLabel = DetailsFrame:WaitForChild("MutationLabel")
+local DetailsAssetNameLabel = DetailsFrame:WaitForChild("AssetNameLabel")
+local DetailsIncomeLabel = DetailsFrame:WaitForChild("IncomeLabel")
+local DetailsCreatorLabel = DetailsFrame:WaitForChild("CreatorLabel")
+local DetailsViewport = DetailsFrame:WaitForChild("ViewportFrame")
+
+local rotatingMannequin
+local rotateConnection
+
+local uiListLayout = InventoryGui:FindFirstChildWhichIsA("UIListLayout", true)
 
 --------------------------------------------------------
 -- DATA
@@ -51,15 +63,10 @@ for _, assetData in pairs(PlayerData.Assets or {}) do
 	table.insert(assets, assetData)
 end
 
-
-
-local PAGE_SIZE = 1
-local currentPage = 1
-
 local MAX_INVENTORY = 100
 
 local function updateInventoryCount()
-	MaximumLabel.Text = string.format("Capacity: %d/%d", #assets, MAX_INVENTORY)
+	CapacityLabel.Text = string.format("Capacity: %d/%d", #assets, MAX_INVENTORY)
 end
 
 local function getAssetKey(assetId, mutation)
@@ -72,9 +79,9 @@ updateInventoryCount()
 -- CREATE PREVIEW
 --------------------------------------------------------
 
-local function createPreview(frame)
+local function createPreview(frame, viewport)
 
-	local viewport = frame:WaitForChild("ViewportFrame")
+	viewport = viewport or frame:WaitForChild("ViewportFrame")
 
 	local assetId = frame:GetAttribute("AssetId")
 
@@ -83,21 +90,16 @@ local function createPreview(frame)
 		return
 	end
 
-
 	viewport:ClearAllChildren()
-
 
 	local camera = Instance.new("Camera")
 	camera.Parent = viewport
 	viewport.CurrentCamera = camera
 
-
 	local mannequin = mannequinTemplate:Clone()
 	mannequin.Parent = viewport
 
-
 	local humanoid = mannequin:WaitForChild("Humanoid")
-
 
 	local description = Instance.new("HumanoidDescription")
 
@@ -106,19 +108,15 @@ local function createPreview(frame)
 	description.TorsoColor = white
 	description.LeftArmColor = white
 	description.RightArmColor = white
-
 	description.Shirt = tonumber(assetId)
-
 
 	local success, err = pcall(function()
 		humanoid:ApplyDescriptionAsync(description)
 	end)
 
-
 	if not success then
 		warn(err)
 	end
-
 
 	for _, obj in ipairs(mannequin:GetDescendants()) do
 		if obj:IsA("BasePart") then
@@ -126,15 +124,11 @@ local function createPreview(frame)
 		end
 	end
 
-
 	mannequin:PivotTo(
-		mannequin:GetPivot()
-			* CFrame.Angles(0, math.rad(180), 0)
+		mannequin:GetPivot() * CFrame.Angles(0, math.rad(180), 0)
 	)
 
-
 	task.wait(0.2)
-
 
 	local torso = mannequin:FindFirstChild("Torso")
 
@@ -144,21 +138,49 @@ local function createPreview(frame)
 			torso.Position
 		)
 	end
+
+	return mannequin
 end
 
-local function setPageButtonsEnabled(enabled)
+local function updateDetails(asset)
 
-	local totalPages = math.max(1, math.ceil(#assets / PAGE_SIZE))
+	DetailsRarityLabel.Text = asset.Rarity
+	DetailsRarityLabel.BackgroundColor3 = RarityDatabase[asset.Rarity].Color
 
-    PageLabel.Text = string.format("%d / %d", currentPage, totalPages)
+	DetailsMutationLabel.Text = asset.Mutation or "Normal"
+	DetailsAssetNameLabel.Text = asset.Name or "Unknown"
+	DetailsIncomeLabel.Text = string.format("$%s/sec", tostring(asset.Income or 0))
+	DetailsCreatorLabel.Text = asset.Creator or "Roblox"
 
-	PrevButton.Active = enabled and currentPage > 1
-	PrevButton.AutoButtonColor = enabled and currentPage > 1
+	DetailsFrame:SetAttribute("AssetId", asset.AssetId)
 
-	NextButton.Active = enabled and currentPage < totalPages
-	NextButton.AutoButtonColor = enabled and currentPage < totalPages
+	if rotateConnection then
+		rotateConnection:Disconnect()
+		rotateConnection = nil
+	end
+
+	rotatingMannequin = createPreview(DetailsFrame, DetailsViewport)
+
+	if rotatingMannequin then
+		rotateConnection = RunService.RenderStepped:Connect(function(dt)
+			if rotatingMannequin.Parent then
+				rotatingMannequin:PivotTo(
+					rotatingMannequin:GetPivot()
+						* CFrame.Angles(0, math.rad(45) * dt, 0)
+				)
+			end
+		end)
+	end
 end
 
+RunService.RenderStepped:Connect(function(dt)
+	if DetailsFrame.Visible and rotatingMannequin and rotatingMannequin.Parent then
+		rotatingMannequin:PivotTo(
+			rotatingMannequin:GetPivot()
+				* CFrame.Angles(0, math.rad(45) * dt, 0)
+		)
+	end
+end)
 
 --------------------------------------------------------
 -- CREATE ITEM FRAME
@@ -183,7 +205,6 @@ local function createItemFrame(asset)
 	frame.Visible = false
 	frame.Parent = ListFrame
 
-
 	frame:SetAttribute(
 		"AssetId",
 		asset.AssetId
@@ -195,11 +216,17 @@ local function createItemFrame(asset)
 	)
 
     local RarityLabel = frame:WaitForChild("RarityLabel")
+	local MutationLabel = frame:WaitForChild("MutationLabel")
     local QuantityLabel = frame:WaitForChild("QuantityLabel")
 
     RarityLabel.Text = asset.Rarity
     RarityLabel.BackgroundColor3 = RarityDatabase[asset.Rarity].Color
-    
+
+	MutationLabel.Text = asset.Mutation or "Error"
+
+	CollectionService:AddTag(RarityLabel, asset.Rarity)
+	CollectionService:AddTag(MutationLabel, asset.Mutation)
+
     QuantityLabel.Text = "x" .. (asset.Quantity or 1)
     
 	inventoryFrames[key] = frame
@@ -211,6 +238,16 @@ local function createItemFrame(asset)
 		frame.Visible = true
 	end)
 
+	frame.MouseButton1Click:Connect(function()
+		updateDetails(asset)
+
+		DetailsFrame.Visible = true
+
+		if uiListLayout then
+			uiListLayout.HorizontalFlex = Enum.UIFlexAlignment.SpaceBetween
+		end
+	end)
+
 	return frame
 end
 
@@ -218,11 +255,7 @@ end
 -- LOAD PAGE
 --------------------------------------------------------
 
-local function loadPage(page)
-
-	currentPage = page
-
-    setPageButtonsEnabled(false)
+local function loadInventory()
 
 	StatusLabel.Text = "Loading..."
 	StatusLabel.Visible = true
@@ -230,66 +263,23 @@ local function loadPage(page)
 	table.clear(inventoryFrames)
 
 	for _, child in ipairs(ListFrame:GetChildren()) do
-		if child:IsA("ImageButton") 
-			and child ~= template then
-
+		if child:IsA("ImageButton") and child ~= template then
 			child:Destroy()
 		end
 	end
 
-	local startIndex = ((page - 1) * PAGE_SIZE) + 1
-
-	local endIndex = math.min(
-		startIndex + PAGE_SIZE - 1,
-		#assets
-	)
-
 	if #assets == 0 then
+		StatusLabel.Text = "No Items"
+		StatusLabel.Visible = true
+		return
+	end
 
-        StatusLabel.Text = "No Items"
-        StatusLabel.Visible = true
-
-        setPageButtonsEnabled(false)
-
-        return
-    end
-
-	for i = startIndex, endIndex do
-
-		local asset = assets[i]
-
-		print(
-			"Creating:",
-			asset.AssetId,
-			asset.Name
-		)
-
+	for _, asset in ipairs(assets) do
+		print(asset)
 		createItemFrame(asset)
 	end
 
 	StatusLabel.Visible = false
-    setPageButtonsEnabled(true)
-end
-
---------------------------------------------------------
--- PAGE BUTTONS
---------------------------------------------------------
-
-local function nextPage()
-
-	local totalPages = math.ceil(#assets / PAGE_SIZE)
-
-	if currentPage < totalPages then
-		loadPage(currentPage + 1)
-	end
-
-end
-
-local function previousPage()
-
-	if currentPage > 1 then
-		loadPage(currentPage - 1)
-	end
 end
 
 --------------------------------------------------------
@@ -299,11 +289,7 @@ end
 template.Visible = false
 StatusLabel.Visible = false
 
-loadPage(1)
-
-NextButton.MouseButton1Click:Connect(nextPage)
-
-PrevButton.MouseButton1Click:Connect(previousPage)
+loadInventory()
 
 --------------------------------------------------------
 -- LIVE INVENTORY UPDATE
