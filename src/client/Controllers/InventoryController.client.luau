@@ -6,12 +6,14 @@ local Players = game:GetService("Players")
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local RarityDatabase = require(ReplicatedStorage.Shared.Databases.RarityDatabase)
 
-local mannequinTemplate = ReplicatedStorage.Models:WaitForChild("Mannequin")
-
 local GetPlayerDataRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.GetPlayerDataRemote)
 local UpdateInventoryUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateInventoryUIRemote)
 
+local GetPreviewAssetsRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.GetPreviewAssetsRemote)
+
 local PlayerData = GetPlayerDataRemote:InvokeServer()
+
+local PreviewCache = {}
 
 if not PlayerData then
 	warn("PlayerData failed to load")
@@ -50,7 +52,7 @@ local DetailsViewport = DetailsFrame:WaitForChild("ViewportFrame")
 local rotatingMannequin
 local rotateConnection
 
-local uiListLayout = InventoryGui:FindFirstChildWhichIsA("UIListLayout", true)
+-- local uiListLayout = InventoryGui:FindFirstChildWhichIsA("UIListLayout", true)
 
 --------------------------------------------------------
 -- DATA
@@ -79,16 +81,7 @@ updateInventoryCount()
 -- CREATE PREVIEW
 --------------------------------------------------------
 
-local function createPreview(frame, viewport)
-
-	viewport = viewport or frame:WaitForChild("ViewportFrame")
-
-	local assetId = frame:GetAttribute("AssetId")
-
-	if not assetId then
-		warn("Missing AssetId")
-		return
-	end
+local function createPreview(asset, viewport)
 
 	viewport:ClearAllChildren()
 
@@ -96,27 +89,18 @@ local function createPreview(frame, viewport)
 	camera.Parent = viewport
 	viewport.CurrentCamera = camera
 
-	local mannequin = mannequinTemplate:Clone()
+
+	local cached = PreviewCache[asset.AssetId]
+
+	if not cached then
+		warn("Missing cached preview:", asset.AssetId)
+		return
+	end
+
+
+	local mannequin = cached:Clone()
 	mannequin.Parent = viewport
 
-	local humanoid = mannequin:WaitForChild("Humanoid")
-
-	local description = Instance.new("HumanoidDescription")
-
-	local white = Color3.fromRGB(255,255,255)
-
-	description.TorsoColor = white
-	description.LeftArmColor = white
-	description.RightArmColor = white
-	description.Shirt = tonumber(assetId)
-
-	local success, err = pcall(function()
-		humanoid:ApplyDescriptionAsync(description)
-	end)
-
-	if not success then
-		warn(err)
-	end
 
 	for _, obj in ipairs(mannequin:GetDescendants()) do
 		if obj:IsA("BasePart") then
@@ -124,20 +108,22 @@ local function createPreview(frame, viewport)
 		end
 	end
 
+
 	mannequin:PivotTo(
-		mannequin:GetPivot() * CFrame.Angles(0, math.rad(180), 0)
+		mannequin:GetPivot()
+		* CFrame.Angles(0, math.rad(90), 0)
 	)
 
-	task.wait(0.2)
 
-	local torso = mannequin:FindFirstChild("Torso")
+	local torso = mannequin:FindFirstChild("UpperTorso")
 
 	if torso then
 		camera.CFrame = CFrame.lookAt(
-			torso.Position + Vector3.new(0,0,4.25),
+			torso.Position + Vector3.new(0,0,3.25),
 			torso.Position
 		)
 	end
+
 
 	return mannequin
 end
@@ -159,7 +145,7 @@ local function updateDetails(asset)
 		rotateConnection = nil
 	end
 
-	rotatingMannequin = createPreview(DetailsFrame, DetailsViewport)
+	rotatingMannequin = createPreview(asset, DetailsViewport)
 
 	if rotatingMannequin then
 		rotateConnection = RunService.RenderStepped:Connect(function(dt)
@@ -233,7 +219,7 @@ local function createItemFrame(asset)
 
 	task.spawn(function()
 
-		createPreview(frame)
+		createPreview(asset, frame:WaitForChild("ViewportFrame"))
 
 		frame.Visible = true
 	end)
@@ -243,9 +229,9 @@ local function createItemFrame(asset)
 
 		DetailsFrame.Visible = true
 
-		if uiListLayout then
-			uiListLayout.HorizontalFlex = Enum.UIFlexAlignment.SpaceBetween
-		end
+		-- if uiListLayout then
+		-- 	uiListLayout.HorizontalFlex = Enum.UIFlexAlignment.SpaceEvenly
+		-- end
 	end)
 
 	return frame
@@ -274,10 +260,28 @@ local function loadInventory()
 		return
 	end
 
+
+	-- Batch request
+	local assetIds = {}
+
 	for _, asset in ipairs(assets) do
-		print(asset)
+		table.insert(assetIds, asset.AssetId)
+	end
+
+
+	local previews = GetPreviewAssetsRemote:InvokeServer(assetIds)
+
+
+	for assetId, preview in pairs(previews) do
+		PreviewCache[tonumber(assetId)] = preview
+	end
+
+
+	-- Create UI
+	for _, asset in ipairs(assets) do
 		createItemFrame(asset)
 	end
+
 
 	StatusLabel.Visible = false
 end

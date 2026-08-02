@@ -4,13 +4,15 @@ local CollectionService = game:GetService("CollectionService")
 
 local TweenService = game:GetService("TweenService")
 
+local PreviewCacheService = require(ServerScriptService.Server.Services.PreviewCacheService)
+
 local ProximityPromptFactory = require(ServerScriptService.Server.Shared.ProximityPromptFactory)
 
 local AssetRollService = require(ServerScriptService.Server.Services.AssetRollService)
 local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
 local RarityDatabase = require(ReplicatedStorage.Shared.Databases.RarityDatabase)
 
-local BaseMannequin = ReplicatedStorage.Models:WaitForChild("BaseMannequin")
+local BaseMannequin = ReplicatedStorage.Models:WaitForChild("Mannequin")
 
 local CurrentMannequin = {}
 
@@ -20,50 +22,50 @@ local speed = 8
 
 local PortalService = {}
 
-local function applyAsset(humanoid, asset)
-	local description = Instance.new("HumanoidDescription")
+-- local function applyAsset(humanoid, asset)
+-- 	local description = Instance.new("HumanoidDescription")
 
-	local white = Color3.fromRGB(255, 255, 255)
+-- 	local white = Color3.fromRGB(255, 255, 255)
 
-	description.HeadColor = white
-	description.TorsoColor = white
-	description.LeftArmColor = white
-	description.RightArmColor = white
-	description.LeftLegColor = white
-	description.RightLegColor = white
+-- 	description.HeadColor = white
+-- 	description.TorsoColor = white
+-- 	description.LeftArmColor = white
+-- 	description.RightArmColor = white
+-- 	description.LeftLegColor = white
+-- 	description.RightLegColor = white
 
-	if asset.Type == "Shirt" then
-		description.Shirt = asset.AssetId
+-- 	if asset.Type == "Shirt" then
+-- 		description.Shirt = asset.AssetId
 
-	elseif asset.Type == "Pants" then
-		description.Pants = asset.AssetId
+-- 	elseif asset.Type == "Pants" then
+-- 		description.Pants = asset.AssetId
 
-	elseif asset.Type == "Back" then
-		description.BackAccessory = tostring(asset.AssetId)
+-- 	elseif asset.Type == "Back" then
+-- 		description.BackAccessory = tostring(asset.AssetId)
 
-	elseif asset.Type == "Hat" then
-		description.HatAccessory = tostring(asset.AssetId)
+-- 	elseif asset.Type == "Hat" then
+-- 		description.HatAccessory = tostring(asset.AssetId)
 
-	elseif asset.Type == "Hair" then
-		description.HairAccessory = tostring(asset.AssetId)
+-- 	elseif asset.Type == "Hair" then
+-- 		description.HairAccessory = tostring(asset.AssetId)
 	
-	elseif asset.Type == "Face" then
-		description.FaceAccessory = tostring(asset.AssetId)
+-- 	elseif asset.Type == "Face" then
+-- 		description.FaceAccessory = tostring(asset.AssetId)
 	
-	elseif asset.Type == "Head" then
-		description.Head = tostring(asset.AssetId)	
-	end
+-- 	elseif asset.Type == "Head" then
+-- 		description.Head = tostring(asset.AssetId)	
+-- 	end
 	
 
-	local success, err = pcall(function()
-		humanoid:ApplyDescription(description)
+-- 	local success, err = pcall(function()
+-- 		humanoid:ApplyDescription(description)
 
-	end)
+-- 	end)
 
-	if not success then
-		warn("Failed applying item:", err)
-	end
-end
+-- 	if not success then
+-- 		warn("Failed applying item:", err)
+-- 	end
+-- end
 
 local function updateMannequinInfo(mannequin, asset, mutation)
 	local head = mannequin:FindFirstChild("Head")
@@ -108,14 +110,15 @@ local function moveMannequin(models)
 			local plot = data.Plot
 			local spawnPoint = plot.Portal.SpawnPoint.SpawnPoint
 
-			local mannequin = BaseMannequin:Clone()
+			local mannequin = PreviewCacheService:GetPreview(data.Asset.AssetId):Clone()
+
 			mannequin.Parent = plot
 			mannequin:PivotTo(spawnPoint.CFrame * CFrame.Angles(0, math.rad(180), 0))
 
-			local humanoid = mannequin:WaitForChild("Humanoid")
+			--local humanoid = mannequin:WaitForChild("Humanoid")
 
 			-- Apply avatar first
-			applyAsset(humanoid, data.Asset)
+			--applyAsset(humanoid, data.Asset)
 
 			-- Wait until Roblox finishes loading accessories/clothes
 			task.wait(0.2)

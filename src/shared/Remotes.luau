@@ -9,6 +9,7 @@ local Remotes = {
     PlaceMannequinRemote = "PlaceMannequinRemote",
 
     GetPlayerDataRemote = "GetPlayerDataRemote",
+    GetPreviewAssetsRemote = "GetPreviewAssetsRemote",
 
     PopupUIBindable = "PopupUIBindable",
 }
