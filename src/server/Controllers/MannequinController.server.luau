@@ -10,16 +10,14 @@ local MannequinService = require(ServerScriptService.Server.Services.MannequinSe
 local PlaceMannequinRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.PlaceMannequinRemote)
 local UpdateMannequinSelectorUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateMannequinSelectorUIRemote)
 
-local function placeMannequin(plot, platformId, mannequinId) : boolean
+local function placeMannequin(player, plot, platformId, mannequinId) : boolean
 	
-	return MannequinService:PlaceMannequin(plot, platformId, mannequinId)
+	return MannequinService:PlaceMannequin(player, plot, platformId, mannequinId)
 end
 
 PlaceMannequinRemote.OnServerEvent:Connect(function(player, mannequinId, platformId)
 
-	print("OKAY")
-
-    local mannequinInfo = MannequinDatabase[mannequinId]
+    local mannequinInfo = MannequinDatabase[tonumber(mannequinId)]
 
     if not mannequinInfo then
         warn(player.Name .. " sent an invalid mannequin ID.")
@@ -40,7 +38,7 @@ PlaceMannequinRemote.OnServerEvent:Connect(function(player, mannequinId, platfor
         return 
     end
 
-    if not placeMannequin(plot, platformId, mannequinId) then
+    if not placeMannequin(player, plot, platformId, mannequinId) then
 		return
 	end
 

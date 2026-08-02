@@ -3,11 +3,46 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local CollectionService = game:GetService("CollectionService")
 
 local ProximityPromptFactory = require(ServerScriptService.Server.Shared.ProximityPromptFactory)
+local PlayerService = require(ServerScriptService.Server.Services.PlayerService)
 local Tags = require(ReplicatedStorage.Shared.Tags)
+
+local PlacedMannequinData = require(ReplicatedStorage.Shared.Data.PlacedMannequinData)
 
 local MannequinService = {}
 
-function MannequinService:PlaceMannequin(plot, platformId, mannequinId) : boolean
+local function DeepClone(tbl)
+	local clone = {}
+
+	for key, value in pairs(tbl) do
+		if type(value) == "table" then
+			clone[key] = DeepClone(value)
+		else
+			clone[key] = value
+		end
+	end
+
+	return clone
+end
+
+local function PlaceMannequinOnPlatform(model, spawnPart)
+	local _, size = model:GetBoundingBox()
+
+	local offset =
+		CFrame.new(0, size.Y / 2, 0)
+		* CFrame.Angles(0, math.rad(180), 0)
+
+	model:PivotTo(spawnPart.CFrame * offset)
+end
+
+function MannequinService:PlaceMannequin(player, plot, platformId, mannequinId) : boolean
+
+	local PlayerData = PlayerService:GetPlayer(player)
+
+	if not PlayerData then
+		warn("PlayerData not found for player: " .. player.Name)
+		return false
+	end
+
 	local platformsFolder = plot:WaitForChild("Platforms")
 	local platformModel = platformsFolder:FindFirstChild(platformId)
 
@@ -37,15 +72,6 @@ function MannequinService:PlaceMannequin(plot, platformId, mannequinId) : boolea
 	clone.Name = "PlacedMannequin"
 	clone.Parent = platformModel
 
-	for _, obj in ipairs(clone:GetDescendants()) do
-		if obj:IsA("BasePart") then
-			obj.Anchored = true
-			obj.CanCollide = false
-			obj.CanTouch = false
-			obj.CanQuery = false
-		end
-	end
-
 	local humanoid = clone:FindFirstChildOfClass("Humanoid")
 	if humanoid then
 		humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
@@ -66,10 +92,41 @@ function MannequinService:PlaceMannequin(plot, platformId, mannequinId) : boolea
         CollectionService:AddTag(prompt, Tags.OpenMannequinCustomizationUITag)
     end
 
-	local offset = CFrame.new(0, 3, 0) * CFrame.Angles(0, math.rad(180), 0)
-	clone:PivotTo(spawnPart.CFrame * offset)
+	local placedMannequin = DeepClone(PlacedMannequinData)
+	placedMannequin.MannequinId = mannequinId
+
+	PlayerData.Platforms[platformId].MannequinId = mannequinId
+	PlayerData.Platforms[platformId].HasMannequin = true
+	PlayerData.Platforms[platformId].PlacedMannequin = placedMannequin
+
+	PlayerService:UpdatePlayer(player)
+
+	PlaceMannequinOnPlatform(clone, spawnPart)
 
 	return true
+end
+
+function MannequinService:LoadMannequins(player, plot)
+	local PlayerData = PlayerService:GetPlayer(player)
+
+	if not PlayerData then
+		warn("PlayerData not found for player: " .. player.Name)
+		return
+	end
+
+	local platformsFolder = plot:WaitForChild("Platforms")
+
+	for platformId, platformData in pairs(PlayerData.Platforms) do
+		if platformData.HasMannequin and platformData.MannequinId then
+			local platformModel = platformsFolder:FindFirstChild(platformId)
+
+			if platformModel then
+				self:PlaceMannequin(player, plot, platformId, platformData.MannequinId)
+			else
+				warn("Platform P" .. platformId .. " not found.")
+			end
+		end
+	end
 end
 
 return MannequinService

@@ -1,22 +1,26 @@
 local PlaceMannequinData = {
-    Mannequin = nil,
+	MannequinId = 0,
 
-    Outfit = {
-        Shirt = "",
-        Pants = "",
-        TShirt = "",
-        Face = "",
-        Head = "",
-        Hair = "",
+	Outfit = {
+		Hair = {},
 
-        Hat = {},
-        FaceAccessory = {},
-        NeckAccessory = {},
-        ShoulderAccessory = {},
-        FrontAccessory = {},
-        BackAccessory = {},
-        WaistAccessory = {},
-    }
+		Hat = {},
+		FaceAccessory = {},
+		NeckAccessory = {},
+		ShoulderAccessory = {},
+		FrontAccessory = {},
+		BackAccessory = {},
+		WaistAccessory = {},
+
+		ShirtAccessory = {},
+		PantsAccessory = {},
+		JacketAccessory = {},
+		SweaterAccessory = {},
+		ShortsAccessory = {},
+		LeftShoeAccessory = {},
+		RightShoeAccessory = {},
+		DressSkirtAccessory = {},
+	}
 }
 
 return PlaceMannequinData

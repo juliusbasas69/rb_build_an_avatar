@@ -1,4 +1,4 @@
-local ConveyorUpgradeDatabase = {
+local PortalUpgradeDatabase = {
 	[1] = {
 		UpgradeCost = 12_500,
 	},
@@ -40,4 +40,4 @@ local ConveyorUpgradeDatabase = {
 	},
 }
 
-return ConveyorUpgradeDatabase
+return PortalUpgradeDatabase

@@ -47,17 +47,14 @@ ProximityPromptService.PromptShown:Connect(function(promptInstance: ProximityPro
 		if holdEndedConnection then holdEndedConnection:Disconnect() end
 	end)
 
-    local humanoidRootPart = promptInstance.Parent
-	if not humanoidRootPart then
+    local accessory = promptInstance.Parent
+
+	if not accessory then
 		return
 	end
 
-	local mannequin = humanoidRootPart:FindFirstAncestor("BaseMannequin")
-	if not mannequin then
-		return
-	end
+	local highlight = accessory:FindFirstChild("Highlight")
 
-	local highlight = mannequin:FindFirstChild("Highlight")
 	if not highlight then
 		return
 	end

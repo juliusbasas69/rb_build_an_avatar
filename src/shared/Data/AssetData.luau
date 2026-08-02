@@ -2,9 +2,10 @@ local AssetData = {
     AssetId = "",
     Name = "",
     Quantity = 0,
-    Rarity = "",
+    Grade = "",
     Mutation = "",
     Income = 0,
+    Type = "",
 }
 
 return AssetData

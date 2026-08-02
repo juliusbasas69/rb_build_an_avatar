@@ -2,102 +2,63 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local CollectionService = game:GetService("CollectionService")
 
-local TweenService = game:GetService("TweenService")
+local Assets = ReplicatedStorage:WaitForChild("Assets")
 
-local PreviewCacheService = require(ServerScriptService.Server.Services.PreviewCacheService)
+local TweenService = game:GetService("TweenService")
 
 local ProximityPromptFactory = require(ServerScriptService.Server.Shared.ProximityPromptFactory)
 
 local AssetRollService = require(ServerScriptService.Server.Services.AssetRollService)
 local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
-local RarityDatabase = require(ReplicatedStorage.Shared.Databases.RarityDatabase)
+local GradeDatabase = require(ReplicatedStorage.Shared.Databases.GradeDatabase)
 
-local BaseMannequin = ReplicatedStorage.Models:WaitForChild("Mannequin")
-
-local CurrentMannequin = {}
+local CurrentAssets = {}
 
 --THIS IS GAMEPASS
-local mannequinCount = 5
+local assetCount = 5
 local speed = 8
 
 local PortalService = {}
 
--- local function applyAsset(humanoid, asset)
--- 	local description = Instance.new("HumanoidDescription")
 
--- 	local white = Color3.fromRGB(255, 255, 255)
+local function updateAssetInfo(handle, asset, grade, mutation)
 
--- 	description.HeadColor = white
--- 	description.TorsoColor = white
--- 	description.LeftArmColor = white
--- 	description.RightArmColor = white
--- 	description.LeftLegColor = white
--- 	description.RightLegColor = white
+	local info = handle:FindFirstChild("Info")
 
--- 	if asset.Type == "Shirt" then
--- 		description.Shirt = asset.AssetId
-
--- 	elseif asset.Type == "Pants" then
--- 		description.Pants = asset.AssetId
-
--- 	elseif asset.Type == "Back" then
--- 		description.BackAccessory = tostring(asset.AssetId)
-
--- 	elseif asset.Type == "Hat" then
--- 		description.HatAccessory = tostring(asset.AssetId)
-
--- 	elseif asset.Type == "Hair" then
--- 		description.HairAccessory = tostring(asset.AssetId)
-	
--- 	elseif asset.Type == "Face" then
--- 		description.FaceAccessory = tostring(asset.AssetId)
-	
--- 	elseif asset.Type == "Head" then
--- 		description.Head = tostring(asset.AssetId)	
--- 	end
-	
-
--- 	local success, err = pcall(function()
--- 		humanoid:ApplyDescription(description)
-
--- 	end)
-
--- 	if not success then
--- 		warn("Failed applying item:", err)
--- 	end
--- end
-
-local function updateMannequinInfo(mannequin, asset, mutation)
-	local head = mannequin:FindFirstChild("Head")
-
-	if head then
-		local info = head:WaitForChild("Info")
-
-		local mutationLabel = info:WaitForChild("Mutation")
-		local rarityLabel = info:WaitForChild("Rarity")
-		local nameLabel = info:WaitForChild("Name")
-		local costLabel = info:WaitForChild("Cost")
-	
-		mannequin:SetAttribute("AssetId", asset.AssetId)
-		mannequin:SetAttribute("Mutation", mutation)
-
-		mutationLabel.Text = mutation
-		mutationLabel.TextColor3 = MutationDatabase[mutation].Color or Color3.new(1, 1, 1)
-		CollectionService:AddTag(mutationLabel, mutation)
-
-		rarityLabel.Text = asset.Rarity
-		rarityLabel.TextColor3 = RarityDatabase[asset.Rarity].Color
-		CollectionService:AddTag(rarityLabel, asset.Rarity)
-
-		nameLabel.Text = asset.Name
-		nameLabel.TextColor3 = Color3.new(1, 1, 1)
-
-		costLabel.Text = "$" .. math.floor(asset.Price * MutationDatabase[mutation].CostMultiplier)
-		costLabel.TextColor3 = Color3.fromRGB(255, 223, 0)
+	if not info then
+		warn("Info not found in Handle")
+		return
 	end
+
+	local mutationLabel = info:WaitForChild("MutationLabel")
+	local gradeLabel = info:WaitForChild("GradeLabel")
+	local nameLabel = info:WaitForChild("NameLabel")
+	local costLabel = info:WaitForChild("CostLabel")
+
+	handle:SetAttribute("AssetId", asset.AssetId)
+	handle:SetAttribute("Mutation", mutation)
+	handle:SetAttribute("Grade", grade)
+
+	mutationLabel.Text = mutation
+	mutationLabel.TextColor3 = MutationDatabase[mutation].Color or Color3.new(1, 1, 1)
+
+	CollectionService:AddTag(mutationLabel, mutation)
+
+	gradeLabel.Text = grade
+	gradeLabel.TextColor3 =
+		GradeDatabase[grade].Color
+
+	CollectionService:AddTag(gradeLabel, grade)
+
+	nameLabel.Text = asset.Name
+	nameLabel.TextColor3 = Color3.new(1, 1, 1)
+
+	costLabel.Text = "$" .. math.floor(asset.Price * MutationDatabase[mutation].CostMultiplier)
+
+	costLabel.TextColor3 =Color3.fromRGB(255, 223, 0)
 end
 
-local function moveMannequin(models)
+local function moveAssets(models)
 
 	for index, data in ipairs(models) do
 
@@ -110,53 +71,82 @@ local function moveMannequin(models)
 			local plot = data.Plot
 			local spawnPoint = plot.Portal.SpawnPoint.SpawnPoint
 
-			local mannequin = PreviewCacheService:GetPreview(data.Asset.AssetId):Clone()
+			local accessory = Assets:FindFirstChild(tostring(data.Asset.AssetId))
 
-			mannequin.Parent = plot
-			mannequin:PivotTo(spawnPoint.CFrame * CFrame.Angles(0, math.rad(180), 0))
+			if not accessory then
+				warn("Missing asset:", data.Asset.AssetId)
+				return
+			end
 
-			--local humanoid = mannequin:WaitForChild("Humanoid")
+			local handle = accessory.Handle:Clone()
 
-			-- Apply avatar first
-			--applyAsset(humanoid, data.Asset)
+			handle.Parent = plot
 
-			-- Wait until Roblox finishes loading accessories/clothes
-			task.wait(0.2)
+			handle.CFrame =
+				spawnPoint.CFrame *
+				CFrame.Angles(0, math.rad(180), 0)
 
-			updateMannequinInfo(
-				mannequin,
+
+			handle.Anchored = true
+			handle.CanCollide = false
+
+
+
+			updateAssetInfo(
+				handle,
 				data.Asset,
+				data.Grade,
 				data.Mutation
 			)
 
-			local rootPart = mannequin:WaitForChild("HumanoidRootPart")
+
+
 			local destination = data.StopPoint
 
 
-			local distance = (rootPart.Position - destination.Position).Magnitude
-			local duration = distance / speed
+			local distance =
+				(handle.Position - destination.Position).Magnitude
+
+
+			local duration =
+				distance / speed
+
+
 
 			local tween = TweenService:Create(
-				rootPart,
-				TweenInfo.new(duration, Enum.EasingStyle.Linear),
+				handle,
+				TweenInfo.new(
+					duration,
+					Enum.EasingStyle.Linear
+				),
 				{
 					Position = destination.Position
 				}
 			)
 
+
 			tween:Play()
 
 			tween.Completed:Wait()
 
+
+
 			local prompt = ProximityPromptFactory:Create({
-				Parent = mannequin:WaitForChild("HumanoidRootPart"),
+				Parent = handle,
 				ActionText = "Buy",
 				ObjectText = data.Asset.Name,
 			})
 
-			CollectionService:AddTag(prompt, "BuyAssetPrompt")
 
-			data.Model = mannequin
+			CollectionService:AddTag(
+				prompt,
+				"BuyAssetPrompt"
+			)
+
+
+
+			data.Model = handle
+
 
 		end)
 
@@ -164,39 +154,55 @@ local function moveMannequin(models)
 
 end
 
-local function destroyMannequin(models, destroyPoint)
 
-	for _, data in ipairs(models) do 
+
+local function destroyAssets(models, destroyPoint)
+
+	for _, data in ipairs(models) do
 
 		task.spawn(function()
 
-			local mannequin = data.Model
 
-			task.wait(0.1)
-			local rootPart = mannequin:WaitForChild("HumanoidRootPart")
+			local handle = data.Model
 
-			if not rootPart then
-				warn("HumanoidRootPart missing:", mannequin:GetFullName())
+
+			if not handle then
 				return
 			end
 
-			local distance = (rootPart.Position - destroyPoint.Position).Magnitude
-			local duration = distance / speed
+
+
+			local distance =
+				(handle.Position - destroyPoint.Position).Magnitude
+
+
+			local duration =
+				distance / speed
+
+
 
 			local tween = TweenService:Create(
-				rootPart,
-				TweenInfo.new(duration, Enum.EasingStyle.Linear),
+				handle,
+				TweenInfo.new(
+					duration,
+					Enum.EasingStyle.Linear
+				),
 				{
 					Position = destroyPoint.Position
 				}
 			)
 
+
 			tween:Play()
+
 			tween.Completed:Wait()
 
-			if mannequin.Parent then
-				mannequin:Destroy()
+
+
+			if handle.Parent then
+				handle:Destroy()
 			end
+
 
 		end)
 
@@ -204,74 +210,134 @@ local function destroyMannequin(models, destroyPoint)
 
 end
 
-local function displayAsset(asset, mutation, plot, index)
 
-	CurrentMannequin[plot] = CurrentMannequin[plot] or {}
 
-	local stopPoints = plot.Portal.StopPoints:GetChildren()
+local function displayAsset(asset, grade, mutation, plot, index)
 
-	table.sort(stopPoints, function(a, b)
-		return tonumber(a.Name) < tonumber(b.Name)
-	end)
+
+	CurrentAssets[plot] = CurrentAssets[plot] or {}
+
+
+	local stopPoints =
+		plot.Portal.StopPoints:GetChildren()
+
+
+
+	table.sort(
+		stopPoints,
+		function(a,b)
+			return tonumber(a.Name) < tonumber(b.Name)
+		end
+	)
+
+
 
 	local stopPoint
 
-	if mannequinCount == 1 then
-		-- Single mannequin goes to the middle
+
+
+	if assetCount == 1 then
+
 		stopPoint = stopPoints[3]
 
-	elseif mannequinCount == 3 then
-		-- 1st -> 4, 2nd -> 3, 3rd -> 2
+
+	elseif assetCount == 3 then
+
 		stopPoint = stopPoints[5 - index]
 
-	elseif mannequinCount == 5 then
-		-- 1st -> 5, 2nd -> 4, 3rd -> 3, 4th -> 2, 5th -> 1
+
+	elseif assetCount == 5 then
+
 		stopPoint = stopPoints[6 - index]
+
 	end
+
+
 
 	if not stopPoint then
+
 		warn("No stop point found!")
 		return
+
 	end
 
-	table.insert(CurrentMannequin[plot], {
-		Asset = asset,
-		Mutation = mutation,
-		StopPoint = stopPoint,
-		Plot = plot
-	})
+
+
+	table.insert(
+		CurrentAssets[plot],
+		{
+			Asset = asset,
+			Grade = grade,
+			Mutation = mutation,
+			StopPoint = stopPoint,
+			Plot = plot
+		}
+	)
 
 end
 
+
+
 function PortalService:SpawnAsset(player, plot)
 
-	local destroyPoint = plot.Portal.DestroyPoint.DestroyPoint
 
-	CurrentMannequin[plot] = CurrentMannequin[plot] or {}
+	local destroyPoint =
+		plot.Portal.DestroyPoint.DestroyPoint
 
-	destroyMannequin(CurrentMannequin[plot], destroyPoint)
 
-	table.clear(CurrentMannequin[plot])
 
-	local portalLevel = plot:GetAttribute("PortalLevel")
+	CurrentAssets[plot] =
+		CurrentAssets[plot] or {}
 
-	for i = 1, mannequinCount do
 
-		local rarity = AssetRollService:RollRarity(portalLevel)
-		local mutation = AssetRollService:RollMutation()
 
-		local assetPool = AssetRollService:GetAssetByRarity(rarity)
+	destroyAssets(
+		CurrentAssets[plot],
+		destroyPoint
+	)
 
-		local selectedAsset = assetPool[
-			Random.new():NextInteger(1, #assetPool)
-		]
+
+
+	table.clear(
+		CurrentAssets[plot]
+	)
+
+
+
+	local portalLevel =
+		plot:GetAttribute("PortalLevel")
+
+
+
+	for i = 1, assetCount do
+
+
+		local selectedAsset =
+			AssetRollService:GetRandomAsset()
+
+
 
 		if not selectedAsset then
 			continue
 		end
 
+
+
+		local grade =
+			AssetRollService:RollGrade(
+				portalLevel
+			)
+
+
+
+		local mutation =
+			AssetRollService:RollMutation()
+
+
+
 		displayAsset(
 			selectedAsset,
+			grade,
 			mutation,
 			plot,
 			i
@@ -279,9 +345,14 @@ function PortalService:SpawnAsset(player, plot)
 
 	end
 
-	-- MOVE ALL ONCE
-	moveMannequin(CurrentMannequin[plot])
+
+
+	moveAssets(
+		CurrentAssets[plot]
+	)
 
 end
+
+
 
 return PortalService

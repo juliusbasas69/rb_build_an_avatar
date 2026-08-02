@@ -13,6 +13,7 @@ local GetMainGui = require(
 local MainGui = GetMainGui()
 
 local suffixes = {
+	"",
 	"K",
 	"M",
 	"B",
@@ -32,9 +33,13 @@ local function formatMoney(amount)
 	end
 
 	local index = math.floor(math.log(amount, 1000))
-	local formatted = amount / (1000 ^ index)
+	local value = amount / (1000 ^ index)
 
-	return string.format("%.1f%s", formatted, suffixes[index]):gsub("%.0", "")
+	-- Prevent 999.995M from becoming 1000.00M
+	value = math.floor(value * 100) / 100
+
+	return string.format("%.2f%s", value, suffixes[index + 1])
+		:gsub("%.?0+([A-Za-z]+)$", "%1")
 end
 
 local function updateGold()

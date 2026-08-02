@@ -9,6 +9,7 @@ local Tags = require(ReplicatedStorage.Shared.Tags)
 
 local PlaceMannequinRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.PlaceMannequinRemote)
 local UpdateMannequinSelectorUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateMannequinSelectorUIRemote)
+
 local mannequins = ReplicatedStorage:WaitForChild("Mannequins")
 
 local player = Players.LocalPlayer
@@ -36,10 +37,10 @@ local function cloneFrame(ownedMannequin, mannequin)
 	local frame = template:Clone()
 	CollectionService:RemoveTag(frame, Tags.MannequinDisplay)
 
-	frame.Name = mannequin.Name
+	frame.Name = ownedMannequin.Name
 	frame.Visible = true
 	frame.Parent = template.Parent
-	frame:SetAttribute("MannequinId", mannequin.Name)
+	frame:SetAttribute("MannequinId", ownedMannequin.Name)
 
 	local quantityLabel = frame:WaitForChild("QuantityLabel")
 	quantityLabel.Text = "x" .. ownedMannequin.Quantity.Value
@@ -97,7 +98,7 @@ local function cloneFrame(ownedMannequin, mannequin)
 
 		local platformId = MainGui.MannequinSelector:GetAttribute("PlatformId")
 
-		PlaceMannequinRemote:FireServer(mannequin.Name, platformId)
+		PlaceMannequinRemote:FireServer(ownedMannequin.Name, platformId)
 	end)
 end
 

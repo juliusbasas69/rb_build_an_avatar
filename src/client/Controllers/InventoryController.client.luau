@@ -4,16 +4,15 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
-local RarityDatabase = require(ReplicatedStorage.Shared.Databases.RarityDatabase)
+local GradeDatabase = require(ReplicatedStorage.Shared.Databases.GradeDatabase)
+local AssetDatabase = require(ReplicatedStorage.Shared.Databases.AssetsDatabase)
+
+local ReplicatedAssets = ReplicatedStorage:WaitForChild("Assets")	
 
 local GetPlayerDataRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.GetPlayerDataRemote)
 local UpdateInventoryUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateInventoryUIRemote)
 
-local GetPreviewAssetsRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.GetPreviewAssetsRemote)
-
 local PlayerData = GetPlayerDataRemote:InvokeServer()
-
-local PreviewCache = {}
 
 if not PlayerData then
 	warn("PlayerData failed to load")
@@ -42,14 +41,14 @@ local CapacityLabel = InventoryFrame:WaitForChild("CapacityFrame"):WaitForChild(
 
 local DetailsFrame = InventoryGui:WaitForChild("DetailsFrame")
 
-local DetailsRarityLabel = DetailsFrame:WaitForChild("RarityLabel")
+local DetailsGradeLabel = DetailsFrame:WaitForChild("GradeLabel")
 local DetailsMutationLabel = DetailsFrame:WaitForChild("MutationLabel")
 local DetailsAssetNameLabel = DetailsFrame:WaitForChild("AssetNameLabel")
 local DetailsIncomeLabel = DetailsFrame:WaitForChild("IncomeLabel")
 local DetailsCreatorLabel = DetailsFrame:WaitForChild("CreatorLabel")
 local DetailsViewport = DetailsFrame:WaitForChild("ViewportFrame")
 
-local rotatingMannequin
+local rotatingHandle
 local rotateConnection
 
 -- local uiListLayout = InventoryGui:FindFirstChildWhichIsA("UIListLayout", true)
@@ -71,8 +70,8 @@ local function updateInventoryCount()
 	CapacityLabel.Text = string.format("Capacity: %d/%d", #assets, MAX_INVENTORY)
 end
 
-local function getAssetKey(assetId, mutation)
-	return tostring(assetId) .. "_" .. mutation
+local function getAssetKey(assetId, mutation, grade)
+	return tostring(assetId) .. "_" .. mutation .. "_" .. grade
 end
 
 updateInventoryCount()
@@ -89,53 +88,65 @@ local function createPreview(asset, viewport)
 	camera.Parent = viewport
 	viewport.CurrentCamera = camera
 
+	local preview = ReplicatedAssets:FindFirstChild(
+		tostring(asset.AssetId)
+	)
 
-	local cached = PreviewCache[asset.AssetId]
-
-	if not cached then
-		warn("Missing cached preview:", asset.AssetId)
+	if not preview then
+		warn("Missing preview:", asset.AssetId)
 		return
 	end
 
+	local handle = preview:FindFirstChild("Handle")
 
-	local mannequin = cached:Clone()
-	mannequin.Parent = viewport
-
-
-	for _, obj in ipairs(mannequin:GetDescendants()) do
-		if obj:IsA("BasePart") then
-			obj.Anchored = true
-		end
+	if not handle then
+		warn("Handle missing:", asset.AssetId)
+		return
 	end
 
+	local clone = handle:Clone()
 
-	mannequin:PivotTo(
-		mannequin:GetPivot()
-		* CFrame.Angles(0, math.rad(90), 0)
+	clone.Parent = viewport
+
+	clone.Anchored = true
+
+	local assetData = AssetDatabase[asset.AssetId]
+
+	local distance = 3
+	local height = 0
+	local rotation = Vector3.new(0, 180, 0)
+
+	if assetData and assetData.Camera then
+		distance = assetData.Camera.Distance or distance
+		height = assetData.Camera.Height or height
+		rotation = assetData.Camera.Rotation or rotation
+	end
+
+	clone.CFrame =
+		CFrame.new(0, 0, 0)
+		* CFrame.Angles(
+			math.rad(rotation.X),
+			math.rad(rotation.Y),
+			math.rad(rotation.Z)
+		)
+
+	camera.CFrame = CFrame.lookAt(
+		clone.Position + Vector3.new(0, height, distance),
+		clone.Position + Vector3.new(0, height, 0)
 	)
 
-
-	local torso = mannequin:FindFirstChild("UpperTorso")
-
-	if torso then
-		camera.CFrame = CFrame.lookAt(
-			torso.Position + Vector3.new(0,0,3.25),
-			torso.Position
-		)
-	end
-
-
-	return mannequin
+	return clone
 end
 
 local function updateDetails(asset)
 
-	DetailsRarityLabel.Text = asset.Rarity
-	DetailsRarityLabel.BackgroundColor3 = RarityDatabase[asset.Rarity].Color
+	DetailsGradeLabel.Text = asset.Grade
 
+	DetailsGradeLabel.BackgroundColor3 = GradeDatabase[asset.Grade].Color
 	DetailsMutationLabel.Text = asset.Mutation or "Normal"
 	DetailsAssetNameLabel.Text = asset.Name or "Unknown"
 	DetailsIncomeLabel.Text = string.format("$%s/sec", tostring(asset.Income or 0))
+
 	DetailsCreatorLabel.Text = asset.Creator or "Roblox"
 
 	DetailsFrame:SetAttribute("AssetId", asset.AssetId)
@@ -145,28 +156,16 @@ local function updateDetails(asset)
 		rotateConnection = nil
 	end
 
-	rotatingMannequin = createPreview(asset, DetailsViewport)
+	rotatingHandle = createPreview(asset, DetailsViewport)
 
-	if rotatingMannequin then
-		rotateConnection = RunService.RenderStepped:Connect(function(dt)
-			if rotatingMannequin.Parent then
-				rotatingMannequin:PivotTo(
-					rotatingMannequin:GetPivot()
-						* CFrame.Angles(0, math.rad(45) * dt, 0)
-				)
+	if rotatingHandle then
+		rotateConnection = RunService.RenderStepped:Connect(function()
+			if rotatingHandle.Parent then
+				rotatingHandle.CFrame *= CFrame.Angles(0, math.rad(1), 0)
 			end
 		end)
 	end
 end
-
-RunService.RenderStepped:Connect(function(dt)
-	if DetailsFrame.Visible and rotatingMannequin and rotatingMannequin.Parent then
-		rotatingMannequin:PivotTo(
-			rotatingMannequin:GetPivot()
-				* CFrame.Angles(0, math.rad(45) * dt, 0)
-		)
-	end
-end)
 
 --------------------------------------------------------
 -- CREATE ITEM FRAME
@@ -178,7 +177,8 @@ local function createItemFrame(asset)
 
 	local key = getAssetKey(
 		asset.AssetId,
-		asset.Mutation
+		asset.Mutation,
+		asset.Grade
 	)
 
 	if inventoryFrames[key] then
@@ -201,16 +201,16 @@ local function createItemFrame(asset)
 		asset.Mutation
 	)
 
-    local RarityLabel = frame:WaitForChild("RarityLabel")
+	local GradeLabel = frame:WaitForChild("GradeLabel")
 	local MutationLabel = frame:WaitForChild("MutationLabel")
     local QuantityLabel = frame:WaitForChild("QuantityLabel")
 
-    RarityLabel.Text = asset.Rarity
-    RarityLabel.BackgroundColor3 = RarityDatabase[asset.Rarity].Color
+    GradeLabel.Text = asset.Grade
+    GradeLabel.BackgroundColor3 = GradeDatabase[asset.Grade].Color
 
 	MutationLabel.Text = asset.Mutation or "Error"
 
-	CollectionService:AddTag(RarityLabel, asset.Rarity)
+	CollectionService:AddTag(GradeLabel, asset.Grade)
 	CollectionService:AddTag(MutationLabel, asset.Mutation)
 
     QuantityLabel.Text = "x" .. (asset.Quantity or 1)
@@ -229,9 +229,6 @@ local function createItemFrame(asset)
 
 		DetailsFrame.Visible = true
 
-		-- if uiListLayout then
-		-- 	uiListLayout.HorizontalFlex = Enum.UIFlexAlignment.SpaceEvenly
-		-- end
 	end)
 
 	return frame
@@ -239,7 +236,7 @@ end
 
 --------------------------------------------------------
 -- LOAD PAGE
---------------------------------------------------------
+-------------------------------------------------------- 
 
 local function loadInventory()
 
@@ -259,23 +256,6 @@ local function loadInventory()
 		StatusLabel.Visible = true
 		return
 	end
-
-
-	-- Batch request
-	local assetIds = {}
-
-	for _, asset in ipairs(assets) do
-		table.insert(assetIds, asset.AssetId)
-	end
-
-
-	local previews = GetPreviewAssetsRemote:InvokeServer(assetIds)
-
-
-	for assetId, preview in pairs(previews) do
-		PreviewCache[tonumber(assetId)] = preview
-	end
-
 
 	-- Create UI
 	for _, asset in ipairs(assets) do
@@ -301,8 +281,6 @@ loadInventory()
 
 UpdateInventoryUIRemote.OnClientEvent:Connect(function(update)
 
-    print(update.Action)
-
 	if update.Action == "Add" then
 
 		local assetData = update.Data
@@ -315,13 +293,12 @@ UpdateInventoryUIRemote.OnClientEvent:Connect(function(update)
 
 		createItemFrame(assetData)
 
-        print("UPDATED")
-
 	elseif update.Action == "Update" then
 
 		local key = getAssetKey(
 			update.Data.AssetId,
-			update.Data.Mutation
+			update.Data.Mutation,
+			update.Data.Grade
 		)
 
 		local frame = inventoryFrames[key]
@@ -341,7 +318,8 @@ UpdateInventoryUIRemote.OnClientEvent:Connect(function(update)
 
 		local key = getAssetKey(
 			update.AssetId,
-			update.Mutation
+			update.Mutation,
+			update.Grade
 		)
 
 		local frame = inventoryFrames[key]

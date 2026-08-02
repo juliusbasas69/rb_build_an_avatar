@@ -2,37 +2,38 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local AssetsDatabase = require(ReplicatedStorage.Shared.Databases.AssetsDatabase)
 local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
-local RarityDatabase = require(ReplicatedStorage.Shared.Databases.RarityDatabase)
+local GradeDatabase = require(ReplicatedStorage.Shared.Databases.GradeDatabase)
 local PortalLevelDatabase = require(ReplicatedStorage.Shared.Databases.PortalLevelDatabase)
 local LuckMultiplierDatabase = require(ReplicatedStorage.Shared.Databases.LuckMultiplierDatabase)
 local MutationLuckMultiplierDatabase = require(ReplicatedStorage.Shared.Databases.MutationLuckMultiplierDatabase)
 
-local AssetsByRarity = {}
-
---THIS IS GAMEPASS
-local playerLuck = 1
+-- THIS IS GAMEPASS
 local mutationLuck = 1
+local gradeLuck = 1
 
-local AssetRollService = {}
+local AssetsList = {}
 
 for _, asset in pairs(AssetsDatabase) do
-	AssetsByRarity[asset.Rarity] = AssetsByRarity[asset.Rarity] or {}
-	table.insert(AssetsByRarity[asset.Rarity], asset)
+	table.insert(AssetsList, asset)
 end
+
+local AssetRollService = {}
 
 function AssetRollService:GetLootTable(portalLevel)
 	return PortalLevelDatabase[tonumber(portalLevel)]
 end
 
-function AssetRollService:ApplyLuck(rarity, weight, luck)
 
-	local multiplier = LuckMultiplierDatabase[rarity] or 0
+function AssetRollService:ApplyGradeLuck(grade, weight, luck)
+
+	local multiplier = LuckMultiplierDatabase[grade] or 0
 
 	return weight * (
 		1 + ((luck - 1) / 100) * multiplier
 	)
 
 end
+
 
 function AssetRollService:ApplyMutationLuck(mutation, chance, luck)
 
@@ -44,7 +45,16 @@ function AssetRollService:ApplyMutationLuck(mutation, chance, luck)
 
 end
 
-function AssetRollService:RollRarity(portalLevel)
+function AssetRollService:GetRandomAsset()
+
+	return AssetsList[
+		Random.new():NextInteger(1, #AssetsList)
+	]
+
+end
+
+
+function AssetRollService:RollGrade(portalLevel)
 
 	local lootTable = self:GetLootTable(portalLevel)
 
@@ -53,41 +63,43 @@ function AssetRollService:RollRarity(portalLevel)
 		return nil
 	end
 
+
 	local adjustedTable = {}
 	local totalWeight = 0
 
-	for rarity, weight in pairs(lootTable) do
 
-		local adjustedWeight = self:ApplyLuck(
-			rarity,
+	for grade, weight in pairs(lootTable) do
+
+		local adjustedWeight = self:ApplyGradeLuck(
+			grade,
 			weight,
-			playerLuck
+			gradeLuck
 		)
 
-		adjustedTable[rarity] = adjustedWeight
+		adjustedTable[grade] = adjustedWeight
 		totalWeight += adjustedWeight
 
 	end
+
 
 	local roll = Random.new():NextNumber(0, totalWeight)
 
 	local current = 0
 
-	for rarity, weight in pairs(adjustedTable) do
+
+	for grade, weight in pairs(adjustedTable) do
 
 		current += weight
 
 		if roll <= current then
-			return rarity
+			return grade
 		end
+
 	end
 end
 
-function AssetRollService:GetAssetByRarity(rarity)
-	return AssetsByRarity[rarity] or {}
-end
-
 function AssetRollService:RollMutation()
+
 	local adjustedTable = {}
 	local totalChance = 0
 
@@ -102,12 +114,14 @@ function AssetRollService:RollMutation()
 
 		adjustedTable[mutation] = adjustedChance
 		totalChance += adjustedChance
+
 	end
 
 
 	local roll = Random.new():NextNumber(0, totalChance)
 
 	local current = 0
+
 
 	for mutation, chance in pairs(adjustedTable) do
 
@@ -116,7 +130,9 @@ function AssetRollService:RollMutation()
 		if roll <= current then
 			return mutation
 		end
+
 	end
 end
+
 
 return AssetRollService

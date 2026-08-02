@@ -37,8 +37,8 @@ end
 -- Buy Item Prompt
 
 local function handleBuyItemPrompt(player, prompt)
-	local mannequin = prompt.Parent.Parent
-	AssetService:BuyAsset(player, mannequin)
+	local accessory = prompt.Parent
+	AssetService:BuyAsset(player, accessory)
 end
 
 for _, prompt in ipairs(CollectionService:GetTagged(Tags.BuyAssetPrompt)) do
