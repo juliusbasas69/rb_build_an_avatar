@@ -5,8 +5,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Tags = require(ReplicatedStorage.Shared.Tags)
 
-local PortalService = require(ServerScriptService.Server.Services.PortalService)
-local PlotService = require(ServerScriptService.Server.Services.PlotService)
+local PortalService = require(ServerScriptService.Server.Portal.PortalService)
+local PlotService = require(ServerScriptService.Server.Plot.PlotService)
 
 local SpawnButtons = CollectionService:GetTagged(Tags.PortalSpawnButton)
 

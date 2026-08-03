@@ -4,39 +4,17 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Messages = require(ReplicatedStorage.Shared.Messages)
 
-local PlayerService = require(ServerScriptService.Server.Services.PlayerService)
+local PlayerService = require(ServerScriptService.Server.Player.PlayerService)
 
-local AssetDatabase = require(
-	ReplicatedStorage.Shared.Databases.AssetsDatabase
-)
+local AssetDatabase = require(ReplicatedStorage.Shared.Databases.AssetsDatabase)
+local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
+local GradeDatabase = require(ReplicatedStorage.Shared.Databases.GradeDatabase)
+local AssetData = require(ReplicatedStorage.Shared.Data.AssetData)
 
-local MutationDatabase = require(
-	ReplicatedStorage.Shared.Databases.MutationDatabase
-)
-
-local GradeDatabase = require(
-	ReplicatedStorage.Shared.Databases.GradeDatabase
-)
-
-local AssetData = require(
-	ReplicatedStorage.Shared.Data.AssetData
-)
-
-
-local PopupUIRemote =
-	ReplicatedStorage.Remotes:WaitForChild(
-		Remotes.PopupUIRemote
-	)
-
-local InventoryUIRemote =
-	ReplicatedStorage.Remotes:WaitForChild(
-		Remotes.UpdateInventoryUIRemote
-	)
-
+local PopupUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.PopupUIRemote)
+local InventoryUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateInventoryUIRemote)
 
 local AssetService = {}
-
-
 
 function AssetService:BuyAsset(player, accessory)
 

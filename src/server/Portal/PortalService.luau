@@ -8,7 +8,7 @@ local TweenService = game:GetService("TweenService")
 
 local ProximityPromptFactory = require(ServerScriptService.Server.Shared.ProximityPromptFactory)
 
-local AssetRollService = require(ServerScriptService.Server.Services.AssetRollService)
+local AssetRollService = require(ServerScriptService.Server.Asset.AssetRollService)
 local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
 local GradeDatabase = require(ReplicatedStorage.Shared.Databases.GradeDatabase)
 

@@ -13,6 +13,8 @@ local Tags = {
     PortalSpawnButton= "PortalSpawnButton",
     MannequinDisplay = "MannequinDisplay",
 
+    SlotsUITag = "SlotsUITag",
+
     Common = "Common",
     Uncommon = "Uncommon",
     Rare = "Rare",

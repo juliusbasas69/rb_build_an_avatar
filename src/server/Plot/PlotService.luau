@@ -108,6 +108,8 @@ function PlotService:AssignPlot(player)
 	plot:SetAttribute("PortalLevel", 1)
 	plot:SetAttribute("PortalSpeed", 8)
 
+	plot.Name = player.UserId
+
 	-- Cache the player's plot
 	PlayerPlots[player] = plot
 
@@ -134,6 +136,8 @@ function PlotService:ReleasePlot(player)
 	plot:SetAttribute("OwnerId", nil)
 	plot:SetAttribute("OwnerName", nil)
 	plot:SetAttribute("PortalLevel", 1)
+
+	plot.Name = "Plot"
 
 	-- Remove statue
 	local ownerStand = plot:FindFirstChild("OwnerStand")

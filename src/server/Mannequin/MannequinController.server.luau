@@ -3,9 +3,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local MannequinDatabase = require(ReplicatedStorage.Shared.Databases.MannequinsDatabase)
-local PlayerService = require(ServerScriptService.Server.Services.PlayerService)
-local PlotService = require(ServerScriptService.Server.Services.PlotService)
-local MannequinService = require(ServerScriptService.Server.Services.MannequinService)
+local PlayerService = require(ServerScriptService.Server.Player.PlayerService)
+local PlotService = require(ServerScriptService.Server.Plot.PlotService)
+local MannequinService = require(ServerScriptService.Server.Mannequin.MannequinService)
 
 local PlaceMannequinRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.PlaceMannequinRemote)
 local UpdateMannequinSelectorUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateMannequinSelectorUIRemote)

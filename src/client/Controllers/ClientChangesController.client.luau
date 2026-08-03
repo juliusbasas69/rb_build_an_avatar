@@ -48,8 +48,6 @@ local function updateGold()
 
 	local gold = playerData:GetAttribute("Gold")
 	GoldLabel.Text = "$" .. formatMoney(gold)
-
-    print(gold)
 end
 
 -- Initial update

@@ -3,7 +3,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
-local UserService = require(ServerScriptService.Server.Services.PlayerService)
+local UserService = require(ServerScriptService.Server.Player.PlayerService)
 
 local GetPlayerDataRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.GetPlayerDataRemote)
 

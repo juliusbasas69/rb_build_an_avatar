@@ -191,15 +191,8 @@ local function createItemFrame(asset)
 	frame.Visible = false
 	frame.Parent = ListFrame
 
-	frame:SetAttribute(
-		"AssetId",
-		asset.AssetId
-	)
-
-	frame:SetAttribute(
-		"Mutation",
-		asset.Mutation
-	)
+	frame:SetAttribute("AssetId", asset.AssetId)
+	frame:SetAttribute("Mutation", asset.Mutation)
 
 	local GradeLabel = frame:WaitForChild("GradeLabel")
 	local MutationLabel = frame:WaitForChild("MutationLabel")

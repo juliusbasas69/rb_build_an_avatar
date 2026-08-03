@@ -3,7 +3,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local CollectionService = game:GetService("CollectionService")
 
 local ProximityPromptFactory = require(ServerScriptService.Server.Shared.ProximityPromptFactory)
-local PlayerService = require(ServerScriptService.Server.Services.PlayerService)
+local PlayerService = require(ServerScriptService.Server.Player.PlayerService)
 local Tags = require(ReplicatedStorage.Shared.Tags)
 
 local PlacedMannequinData = require(ReplicatedStorage.Shared.Data.PlacedMannequinData)
@@ -27,9 +27,7 @@ end
 local function PlaceMannequinOnPlatform(model, spawnPart)
 	local _, size = model:GetBoundingBox()
 
-	local offset =
-		CFrame.new(0, size.Y / 2, 0)
-		* CFrame.Angles(0, math.rad(180), 0)
+	local offset = CFrame.new(0, size.Y / 2, 0) * CFrame.Angles(0, math.rad(180), 0)
 
 	model:PivotTo(spawnPart.CFrame * offset)
 end
@@ -46,14 +44,19 @@ function MannequinService:PlaceMannequin(player, plot, platformId, mannequinId) 
 	local platformsFolder = plot:WaitForChild("Platforms")
 	local platformModel = platformsFolder:FindFirstChild(platformId)
 
-    platformModel:FindFirstChild("HasMannequin", true).Value = true
+	platformModel:SetAttribute("MannequinId", true)
 
 	if not platformModel then
 		warn("Platform P" .. platformId .. " not found.")
 		return false
 	end
 
-	local spawnPart = platformModel:WaitForChild("Platform")
+	local stand = platformModel:WaitForChild("Stand")
+
+	if not stand then
+		warn("Stand not found for platform P" .. platformId)
+		return false
+	end
 
 	local mannequin = ReplicatedStorage.Mannequins:FindFirstChild(mannequinId)
 
@@ -101,7 +104,7 @@ function MannequinService:PlaceMannequin(player, plot, platformId, mannequinId) 
 
 	PlayerService:UpdatePlayer(player)
 
-	PlaceMannequinOnPlatform(clone, spawnPart)
+	PlaceMannequinOnPlatform(clone, stand)
 
 	return true
 end
@@ -121,6 +124,12 @@ function MannequinService:LoadMannequins(player, plot)
 			local platformModel = platformsFolder:FindFirstChild(platformId)
 
 			if platformModel then
+
+				local prompt = platformModel:FindFirstChildWhichIsA("ProximityPrompt", true)
+				if prompt then
+					prompt.Enabled = false
+				end
+
 				self:PlaceMannequin(player, plot, platformId, platformData.MannequinId)
 			else
 				warn("Platform P" .. platformId .. " not found.")

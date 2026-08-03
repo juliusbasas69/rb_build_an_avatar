@@ -1,7 +1,7 @@
 local Players = game:GetService("Players")
 
-local PlotService = require(script.Parent.Parent.Services.PlotService)
-local MannequinService = require(script.Parent.Parent.Services.MannequinService)
+local PlotService = require(script.Parent.Parent.Plot.PlotService)
+local MannequinService = require(script.Parent.Parent.Mannequin.MannequinService)
 
 Players.PlayerAdded:Connect(function(player)
 	player.CharacterAdded:Connect(function(character)

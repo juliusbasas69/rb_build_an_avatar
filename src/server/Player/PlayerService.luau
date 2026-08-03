@@ -1,7 +1,7 @@
 local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local DataService = require(ServerScriptService.Server.Services.DataStoreService)
+local DataService = require(ServerScriptService.Server.DataStore.DataStoreService)
 local PlayerData = require(ReplicatedStorage.Shared.Data.PlayerData)
 local OwnedMannequinData = require(ReplicatedStorage.Shared.Data.OwnedMannequinData)
 

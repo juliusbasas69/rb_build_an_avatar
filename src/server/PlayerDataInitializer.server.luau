@@ -1,6 +1,6 @@
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local PlayerService = require(ServerScriptService.Server.Services.PlayerService)
+local PlayerService = require(ServerScriptService.Server.Player.PlayerService)
 
 local Players = game:GetService("Players")
 
