@@ -29,6 +29,16 @@ Players.PlayerAdded:Connect(function(player)
 		quantity.Parent = mannequinFolder
 	end
 
+	player.CharacterAdded:Connect(function(character)
+
+		for _, object in ipairs(character:GetDescendants()) do
+			if object:IsA("BasePart") then
+				object.CollisionGroup = "Players"
+			end
+		end
+
+	end)
+
 end)
 
 Players.PlayerRemoving:Connect(function(player)

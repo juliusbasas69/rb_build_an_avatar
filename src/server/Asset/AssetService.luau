@@ -64,8 +64,6 @@ function AssetService:BuyAsset(player, accessory)
 
 	local key = assetId .. "_" .. mutation .. "_" .. grade
 
-    print(key)
-
 	local ownedAsset = playerData.Assets[key]
 
 	local isNew = false

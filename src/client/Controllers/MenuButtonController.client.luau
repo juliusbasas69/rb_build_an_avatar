@@ -20,7 +20,7 @@ local function ConnectMenuButton(menuButton)
 		if menuButton.Name == "StatsButton" then
 			MainGui.Stats.Visible = true
 		elseif menuButton.Name == "ItemsButton" then
-			MainGui.Inventory.Visible = true
+			MainGui.InventoryGui.Visible = true
 		end
 		
 		menuButton.Parent.Visible = false

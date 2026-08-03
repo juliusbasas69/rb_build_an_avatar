@@ -13,14 +13,11 @@ local UpdateMannequinSelectorUIRemote = ReplicatedStorage.Remotes:WaitForChild(R
 local mannequins = ReplicatedStorage:WaitForChild("Mannequins")
 
 local player = Players.LocalPlayer
-local GetMainGui = require(
-	player:WaitForChild("PlayerScripts")
-		:WaitForChild("Client")
-		:WaitForChild("Shared")
-		:WaitForChild("GetMainGui")
-)
+local GetMainGui = require(player:WaitForChild("PlayerScripts"):WaitForChild("Client"):WaitForChild("Shared"):WaitForChild("GetMainGui"))
 
 local MainGui = GetMainGui()
+local MannequinSelectorGui = MainGui.MannequinSelectorGui
+local MenuGui = MainGui.Menu
 
 local template
 local hasMannequins = false
@@ -96,30 +93,30 @@ local function cloneFrame(ownedMannequin, mannequin)
 
 	frame.MouseButton1Click:Connect(function()
 
-		local platformId = MainGui.MannequinSelector:GetAttribute("PlatformId")
+		local platformId = MannequinSelectorGui:GetAttribute("PlatformId")
 
 		PlaceMannequinRemote:FireServer(ownedMannequin.Name, platformId)
 	end)
 end
 
 local function displayNoMannequins()
-	local scrollingFrame = MainGui.MannequinSelector:FindFirstChild("ScrollingFrame", true)
+	local statusLabel = MannequinSelectorGui:FindFirstChild("StatusLabel", true)
 
-	if #player.PlayerData.OwnedMannequins:GetChildren() > 0 then
+	if not statusLabel then
 		return
 	end
 
-	local label = Instance.new("TextLabel")
-	label.Name = "NoMannequins"
-	label.Size = UDim2.fromScale(1, 0.5)
-	label.BackgroundTransparency = 1
-	label.FontFace = Font.new("rbxassetid://16658221428")
-	label.Text = "You don't own any mannequins yet."
-	label.TextScaled = true
-	label.TextWrapped = true
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.TextStrokeTransparency = 0
-	label.Parent = scrollingFrame
+	statusLabel.Text = "🛍️ Your mannequin collection is empty!"
+	statusLabel.Visible = true
+
+	statusLabel.BackgroundTransparency = 1
+	statusLabel.Font = Enum.Font.LuckiestGuy
+	statusLabel.TextScaled = true
+	statusLabel.TextWrapped = true
+
+	statusLabel.TextColor3 = Color3.fromHex("#B8860B")
+	statusLabel.TextStrokeColor3 = Color3.fromHex("#FFFFFF")
+	statusLabel.TextStrokeTransparency = 0.35
 end
 
 UpdateMannequinSelectorUIRemote.OnClientEvent:Connect(function(mannequinId)
@@ -142,8 +139,8 @@ UpdateMannequinSelectorUIRemote.OnClientEvent:Connect(function(mannequinId)
 		end
 	end
 
-	MainGui.MannequinSelector.Visible = false
-	MainGui.Menu.Visible = true
+	MannequinSelectorGui.Visible = false
+	MenuGui.Visible = true
 end)
 
 local function displayAllInitial()
@@ -155,17 +152,19 @@ local function displayAllInitial()
 		local mannequin = mannequins:FindFirstChild(ownedMannequin.Name)
 
 		if mannequin then
-			--hasMannequins = true
+			print(mannequin)
+			hasMannequins = true
 
 			cloneFrame(ownedMannequin, mannequin)
 		end
 	end
 
+	print(hasMannequins)
 	if not hasMannequins then
 		displayNoMannequins()
 	end
 	
-	--template:Destroy()
+	template:Destroy()
 
 end
 

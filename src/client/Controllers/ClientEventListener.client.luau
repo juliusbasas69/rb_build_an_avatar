@@ -22,7 +22,7 @@ end)
 
 OpenMannequinSelectorUIRemote.OnClientEvent:Connect(function(platformId)
 	MainGui.Menu.Visible = false
-	MainGui.MannequinSelector.Visible = true
+	MainGui.MannequinSelectorGui.Visible = true
 
-	MainGui.MannequinSelector:SetAttribute("PlatformId", platformId)
+	MainGui.MannequinSelectorGui:SetAttribute("PlatformId", platformId)
 end)

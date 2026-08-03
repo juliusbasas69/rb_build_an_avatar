@@ -28,13 +28,13 @@ local GetMainGui = require(player:WaitForChild("PlayerScripts"):WaitForChild("Cl
 
 local MainGui = GetMainGui()
 
-local InventoryGui = MainGui:WaitForChild("Inventory")
+local InventoryGui = MainGui:WaitForChild("InventoryGui")
 local InventoryFrame = InventoryGui:WaitForChild("InventoryFrame")
 local ListFrame = InventoryFrame:WaitForChild("ListFrame")
 
 local template = ListFrame:WaitForChild("Template")
 
-local StatusLabel = ListFrame:WaitForChild("StatusLabel")
+local StatusLabel = InventoryFrame:WaitForChild("StatusLabel")
 local CapacityLabel = InventoryFrame:WaitForChild("CapacityFrame"):WaitForChild("CapacityLabel")
 
 local DetailsFrame = InventoryGui:WaitForChild("DetailsFrame")
@@ -221,8 +221,16 @@ end
 
 local function loadInventory()
 
-	StatusLabel.Text = "Loading..."
+	StatusLabel.Text = "🌿 Loading your inventory..."
 	StatusLabel.Visible = true
+
+	StatusLabel.BackgroundTransparency = 1
+	StatusLabel.TextColor3 = Color3.fromHex("#4E7A4A")
+	StatusLabel.TextStrokeColor3 = Color3.fromHex("#FFFFFF")
+	StatusLabel.TextStrokeTransparency = 0.65
+	StatusLabel.Font = Enum.Font.FredokaOne -- or GothamBold
+	StatusLabel.TextSize = 22
+	StatusLabel.TextWrapped = true
 
 	table.clear(inventoryFrames)
 
@@ -233,8 +241,18 @@ local function loadInventory()
 	end
 
 	if #assets == 0 then
-		StatusLabel.Text = "No Items"
+		StatusLabel.Text = "🍃 Your inventory is empty!"
 		StatusLabel.Visible = true
+
+		-- Styling
+		StatusLabel.BackgroundTransparency = 1
+		StatusLabel.TextColor3 = Color3.fromHex("#4E7A4A")
+		StatusLabel.TextStrokeColor3 = Color3.fromHex("#FFFFFF")
+		StatusLabel.TextStrokeTransparency = 0.65
+		StatusLabel.Font = Enum.Font.LuckiestGuy -- or GothamBold if you prefer
+		StatusLabel.TextSize = 22
+		StatusLabel.TextWrapped = true
+
 		return
 	end
 

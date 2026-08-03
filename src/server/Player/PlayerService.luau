@@ -38,10 +38,10 @@ function PlayerService:UserInitial(player)
 		data = DeepClone(PlayerData)
 
 		local starterMannequin = table.clone(OwnedMannequinData)
-		starterMannequin.Id = "MNR6"
+		starterMannequin.Id = "47221299427770"
 		starterMannequin.Quantity = 999
 
-		data.OwnedMannequins["MNR6"] = starterMannequin
+		data.OwnedMannequins["47221299427770"] = starterMannequin
 
 		DataService:SavePlayer(player, data)
 	end

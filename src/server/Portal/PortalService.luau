@@ -6,6 +6,8 @@ local Assets = ReplicatedStorage:WaitForChild("Assets")
 
 local TweenService = game:GetService("TweenService")
 
+local BaseMannequin = ReplicatedStorage:WaitForChild("BaseMannequin")
+
 local ProximityPromptFactory = require(ServerScriptService.Server.Shared.ProximityPromptFactory)
 
 local AssetRollService = require(ServerScriptService.Server.Asset.AssetRollService)
@@ -20,42 +22,108 @@ local speed = 8
 
 local PortalService = {}
 
+local function applyAsset(humanoid, asset)
+	local description = humanoid:GetAppliedDescription()
 
-local function updateAssetInfo(handle, asset, grade, mutation)
+	local accessoryType = asset.AccessoryType
+	local assetId = asset.AssetId
 
-	local info = handle:FindFirstChild("Info")
+	-- Layered Clothing
+	if accessoryType == Enum.AccessoryType.Jacket
+		or accessoryType == Enum.AccessoryType.Shirt
+		or accessoryType == Enum.AccessoryType.Pants
+		or accessoryType == Enum.AccessoryType.Sweater
+		or accessoryType == Enum.AccessoryType.DressSkirt
+		or accessoryType == Enum.AccessoryType.Shorts
+		or accessoryType == Enum.AccessoryType.LeftShoe
+		or accessoryType == Enum.AccessoryType.RightShoe
+		or accessoryType == Enum.AccessoryType.TShirt
+		or accessoryType == Enum.AccessoryType.Eyebrow
+		or accessoryType == Enum.AccessoryType.Eyelash then
 
-	if not info then
-		warn("Info not found in Handle")
-		return
+		local accessories = description:GetAccessories(true)
+
+		table.insert(accessories, {
+			AssetId = assetId,
+			AccessoryType = accessoryType,
+			IsLayered = true,
+			Order = #accessories + 1
+		})
+
+		description:SetAccessories(accessories, true)
+
+	-- Classic Accessories
+	elseif accessoryType == Enum.AccessoryType.Hat then
+
+		description.HatAccessory = description.HatAccessory .. "," .. assetId
+
+	elseif accessoryType == Enum.AccessoryType.Hair then
+
+		description.HairAccessory = description.HairAccessory .. "," .. assetId
+
+	elseif accessoryType == Enum.AccessoryType.Face then
+
+		description.FaceAccessory = description.FaceAccessory .. "," .. assetId
+
+	elseif accessoryType == Enum.AccessoryType.Neck then
+
+		description.NeckAccessory = description.NeckAccessory .. "," .. assetId
+
+	elseif accessoryType == Enum.AccessoryType.Shoulder then
+
+		description.ShoulderAccessory = description.ShoulderAccessory .. "," .. assetId
+
+	elseif accessoryType == Enum.AccessoryType.Front then
+
+		description.FrontAccessory = description.FrontAccessory .. "," .. assetId
+
+	elseif accessoryType == Enum.AccessoryType.Back then
+
+		description.BackAccessory = description.BackAccessory .. "," .. assetId
+
+	elseif accessoryType == Enum.AccessoryType.Waist then
+
+		description.WaistAccessory = description.WaistAccessory .. "," .. assetId
 	end
 
-	local mutationLabel = info:WaitForChild("MutationLabel")
-	local gradeLabel = info:WaitForChild("GradeLabel")
-	local nameLabel = info:WaitForChild("NameLabel")
-	local costLabel = info:WaitForChild("CostLabel")
+	humanoid:ApplyDescription(description)
+end
 
-	handle:SetAttribute("AssetId", asset.AssetId)
-	handle:SetAttribute("Mutation", mutation)
-	handle:SetAttribute("Grade", grade)
 
-	mutationLabel.Text = mutation
-	mutationLabel.TextColor3 = MutationDatabase[mutation].Color or Color3.new(1, 1, 1)
+local function updateAssetInfo(mannequin, asset, grade, mutation)
 
-	CollectionService:AddTag(mutationLabel, mutation)
+	local head = mannequin:FindFirstChild("Head")
 
-	gradeLabel.Text = grade
-	gradeLabel.TextColor3 =
-		GradeDatabase[grade].Color
+	if head then
+		local info = head:WaitForChild("Info")
 
-	CollectionService:AddTag(gradeLabel, grade)
+		local mutationLabel = info:WaitForChild("MutationLabel")
+		local gradeLabel = info:WaitForChild("GradeLabel")
+		local nameLabel = info:WaitForChild("NameLabel")
+		local costLabel = info:WaitForChild("CostLabel")
+	
+		mannequin:SetAttribute("AssetId", asset.AssetId)
+		mannequin:SetAttribute("Mutation", mutation)
+		mannequin:SetAttribute("Grade", grade)
 
-	nameLabel.Text = asset.Name
-	nameLabel.TextColor3 = Color3.new(1, 1, 1)
+		mutationLabel.Text = mutation
+		mutationLabel.TextColor3 = MutationDatabase[mutation].Color or Color3.new(1, 1, 1)
+		CollectionService:AddTag(mutationLabel, mutation)
 
-	costLabel.Text = "$" .. math.floor(asset.Price * MutationDatabase[mutation].CostMultiplier)
+		CollectionService:AddTag(mutationLabel, mutation)
 
-	costLabel.TextColor3 =Color3.fromRGB(255, 223, 0)
+		gradeLabel.Text = grade
+		gradeLabel.TextColor3 = GradeDatabase[grade].Color
+
+		CollectionService:AddTag(gradeLabel, grade)
+
+		nameLabel.Text = asset.Name
+		nameLabel.TextColor3 = Color3.new(1, 1, 1)
+
+		costLabel.Text = "$" .. math.floor(asset.Price * MutationDatabase[mutation].CostMultiplier)
+
+		costLabel.TextColor3 =Color3.fromRGB(255, 223, 0)
+	end
 end
 
 local function moveAssets(models)
@@ -71,50 +139,32 @@ local function moveAssets(models)
 			local plot = data.Plot
 			local spawnPoint = plot.Portal.SpawnPoint.SpawnPoint
 
-			local accessory = Assets:FindFirstChild(tostring(data.Asset.AssetId))
+			local mannequin = BaseMannequin:Clone()
+			mannequin.Parent = plot
+			mannequin:PivotTo(spawnPoint.CFrame * CFrame.Angles(0, math.rad(180), 0))
 
-			if not accessory then
-				warn("Missing asset:", data.Asset.AssetId)
-				return
-			end
+			local humanoid = mannequin:WaitForChild("Humanoid")
 
-			local handle = accessory.Handle:Clone()
+			applyAsset(humanoid, data.Asset)
 
-			handle.Parent = plot
-
-			handle.CFrame =
-				spawnPoint.CFrame *
-				CFrame.Angles(0, math.rad(180), 0)
-
-
-			handle.Anchored = true
-			handle.CanCollide = false
-
-
+			task.wait(0.2)
 
 			updateAssetInfo(
-				handle,
+				mannequin,
 				data.Asset,
 				data.Grade,
 				data.Mutation
 			)
 
-
-
+			local rootPart = mannequin:WaitForChild("HumanoidRootPart")
 			local destination = data.StopPoint
 
+			local distance = (rootPart.Position - destination.Position).Magnitude
 
-			local distance =
-				(handle.Position - destination.Position).Magnitude
-
-
-			local duration =
-				distance / speed
-
-
+			local duration = distance / speed
 
 			local tween = TweenService:Create(
-				handle,
+				rootPart,
 				TweenInfo.new(
 					duration,
 					Enum.EasingStyle.Linear
@@ -124,34 +174,36 @@ local function moveAssets(models)
 				}
 			)
 
-
 			tween:Play()
 
 			tween.Completed:Wait()
 
+			for _, object in ipairs(mannequin:GetDescendants()) do
+				if object:IsA("BasePart") then
 
+					object.Anchored = true
+					object.CanCollide = false
+					object.CanTouch = false
+					object.CanQuery = false
+
+					object.CollisionGroup = "Mannequin"
+
+				end
+			end
 
 			local prompt = ProximityPromptFactory:Create({
-				Parent = handle,
+				Parent = rootPart,
 				ActionText = "Buy",
 				ObjectText = data.Asset.Name,
 			})
-
 
 			CollectionService:AddTag(
 				prompt,
 				"BuyAssetPrompt"
 			)
-
-
-
-			data.Model = handle
-
-
+			data.Model = mannequin
 		end)
-
 	end
-
 end
 
 
@@ -162,27 +214,26 @@ local function destroyAssets(models, destroyPoint)
 
 		task.spawn(function()
 
+			local mannequin = data.Model
 
-			local handle = data.Model
-
-
-			if not handle then
+			if not mannequin then
 				return
 			end
 
+			task.wait(0.1)
+			local rootPart = mannequin:WaitForChild("HumanoidRootPart")
 
+			if not rootPart then
+				warn("HumanoidRootPart missing:", mannequin:GetFullName())
+				return
+			end
 
-			local distance =
-				(handle.Position - destroyPoint.Position).Magnitude
+			local distance = (rootPart.Position - destroyPoint.Position).Magnitude
 
-
-			local duration =
-				distance / speed
-
-
+			local duration = distance / speed
 
 			local tween = TweenService:Create(
-				handle,
+				rootPart,
 				TweenInfo.new(
 					duration,
 					Enum.EasingStyle.Linear
@@ -192,36 +243,22 @@ local function destroyAssets(models, destroyPoint)
 				}
 			)
 
-
 			tween:Play()
 
 			tween.Completed:Wait()
 
-
-
-			if handle.Parent then
-				handle:Destroy()
+			if mannequin.Parent then
+				mannequin:Destroy()
 			end
-
-
 		end)
-
 	end
-
 end
-
-
 
 local function displayAsset(asset, grade, mutation, plot, index)
 
-
 	CurrentAssets[plot] = CurrentAssets[plot] or {}
 
-
-	local stopPoints =
-		plot.Portal.StopPoints:GetChildren()
-
-
+	local stopPoints = plot.Portal.StopPoints:GetChildren()
 
 	table.sort(
 		stopPoints,
@@ -230,38 +267,23 @@ local function displayAsset(asset, grade, mutation, plot, index)
 		end
 	)
 
-
-
 	local stopPoint
 
-
-
 	if assetCount == 1 then
-
 		stopPoint = stopPoints[3]
 
-
 	elseif assetCount == 3 then
-
 		stopPoint = stopPoints[5 - index]
 
-
 	elseif assetCount == 5 then
-
 		stopPoint = stopPoints[6 - index]
 
 	end
 
-
-
 	if not stopPoint then
-
 		warn("No stop point found!")
 		return
-
 	end
-
-
 
 	table.insert(
 		CurrentAssets[plot],
@@ -273,7 +295,6 @@ local function displayAsset(asset, grade, mutation, plot, index)
 			Plot = plot
 		}
 	)
-
 end
 
 
@@ -281,59 +302,26 @@ end
 function PortalService:SpawnAsset(player, plot)
 
 
-	local destroyPoint =
-		plot.Portal.DestroyPoint.DestroyPoint
+	local destroyPoint = plot.Portal.DestroyPoint.DestroyPoint
 
+	CurrentAssets[plot] = CurrentAssets[plot] or {}
 
+	destroyAssets(CurrentAssets[plot], destroyPoint)
 
-	CurrentAssets[plot] =
-		CurrentAssets[plot] or {}
+	table.clear(CurrentAssets[plot])
 
-
-
-	destroyAssets(
-		CurrentAssets[plot],
-		destroyPoint
-	)
-
-
-
-	table.clear(
-		CurrentAssets[plot]
-	)
-
-
-
-	local portalLevel =
-		plot:GetAttribute("PortalLevel")
-
-
+	local portalLevel = plot:GetAttribute("PortalLevel")
 
 	for i = 1, assetCount do
-
-
-		local selectedAsset =
-			AssetRollService:GetRandomAsset()
-
-
+		local selectedAsset = AssetRollService:GetRandomAsset()
 
 		if not selectedAsset then
 			continue
 		end
 
+		local grade = AssetRollService:RollGrade(portalLevel)
 
-
-		local grade =
-			AssetRollService:RollGrade(
-				portalLevel
-			)
-
-
-
-		local mutation =
-			AssetRollService:RollMutation()
-
-
+		local mutation = AssetRollService:RollMutation()
 
 		displayAsset(
 			selectedAsset,
@@ -342,17 +330,9 @@ function PortalService:SpawnAsset(player, plot)
 			plot,
 			i
 		)
-
 	end
 
-
-
-	moveAssets(
-		CurrentAssets[plot]
-	)
-
+	moveAssets(CurrentAssets[plot])
 end
-
-
 
 return PortalService

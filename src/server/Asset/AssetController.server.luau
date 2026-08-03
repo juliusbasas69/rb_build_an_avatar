@@ -29,7 +29,8 @@ end
 
 local function handleBuyAssetPrompt(prompt)
 	connectPrompt(prompt, function(player)
-		local accessory = prompt.Parent
+		
+		local accessory = prompt.Parent.Parent
 
 		AssetService:BuyAsset(player, accessory)
 	end)
