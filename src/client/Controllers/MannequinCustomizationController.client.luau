@@ -2,17 +2,18 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
-local Tags = require(ReplicatedStorage.Shared.Tags)
 local GradeDatabase = require(ReplicatedStorage.Shared.Databases.GradeDatabase)
 local AssetDatabase = require(ReplicatedStorage.Shared.Databases.AssetsDatabase)
 
-local ReplicatedAssets = ReplicatedStorage:WaitForChild("Assets")	
+local OutfitData = require(ReplicatedStorage.Shared.Data.OutfitData)
 
 local GetPlayerDataRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.GetPlayerDataRemote)
 local UpdateInventoryUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateInventoryUIRemote)
 local OpenMannequinCustomizationUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.OpenMannequinCustomizationUIRemote)
+local SaveOutfitMannequinRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.SaveOutfitMannequinRemote)
 
 local PlayerData = GetPlayerDataRemote:InvokeServer()
 
@@ -44,50 +45,80 @@ local StatsFrame = PreviewFrame:WaitForChild("StatsFrame")
 local HideButton = PreviewFrame:WaitForChild("HideButton")
 local ShowButton = PreviewFrame:WaitForChild("ShowButton")
 
+local ZoomInButton = PreviewFrame:WaitForChild("ZoomInButton")
+local ZoomOutButton = PreviewFrame:WaitForChild("ZoomOutButton")
+
+local SlotsFrame = PreviewFrame:WaitForChild("SlotsFrame")
+local NextButton = PreviewFrame:WaitForChild("NextButton")
+local PrevButton = PreviewFrame:WaitForChild("PrevButton")
+
+local SaveButton = PreviewFrame:WaitForChild("SaveButton")
+
 local template = ListFrame:WaitForChild("Template")
 
 local StatusLabel = ListFrame:WaitForChild("StatusLabel")
+local CapacityLabel = InventoryFrame:WaitForChild("CapacityFrame"):WaitForChild("CapacityLabel")
 
 local assets = {}
 local inventoryFrames = {}
 
+local MAX_INVENTORY = 100
+
+local previewCamera
+local previewCenter
+local zoomDistance = 5
+local MIN_ZOOM = 2
+local MAX_ZOOM = 8
+
+local SCROLL_AMOUNT = 280
+
 for _, assetData in pairs(PlayerData.Assets or {}) do
 	table.insert(assets, assetData)
+end
+
+local function updateInventoryCount()
+	CapacityLabel.Text = string.format("Capacity: %d/%d", #assets, MAX_INVENTORY)
 end
 
 local function getAssetKey(assetId, mutation, grade)
 	return tostring(assetId) .. "_" .. mutation .. "_" .. grade
 end
 
-StatsButton.MouseEnter:Connect(function()
-	StatsFrame.Visible = true
-end)
-
-StatsButton.MouseLeave:Connect(function()
-	StatsFrame.Visible = false
-end)
-
 local function setTaggedObjectsVisible(visible)
-	for _, object in ipairs(CollectionService:GetTagged(Tags.SlotsUITag)) do
-		if object:IsA("ImageButton") then
-			object.Visible = visible
-		end
-	end
+	SlotsFrame.Visible = visible
+	NextButton.Visible = visible
+	PrevButton.Visible = visible
 end
 
-HideButton.MouseButton1Click:Connect(function()
-	setTaggedObjectsVisible(false)
+local function scroll(amount)
+	local canvasWidth = SlotsFrame.AbsoluteCanvasSize.X
+	local windowWidth = SlotsFrame.AbsoluteWindowSize.X
 
-	HideButton.Visible = false
-	ShowButton.Visible = true
-end)
+	local maxX = math.max(0, canvasWidth - windowWidth)
 
-ShowButton.MouseButton1Click:Connect(function()
-	setTaggedObjectsVisible(true)
+	local newX = math.clamp(
+		SlotsFrame.CanvasPosition.X + amount,
+		0,
+		maxX
+	)
 
-	ShowButton.Visible = false
-	HideButton.Visible = true
-end)
+	TweenService:Create(
+		SlotsFrame,
+		TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{
+			CanvasPosition = Vector2.new(newX, 0)
+		}
+	):Play()
+end
+
+local function updatePreviewCamera()
+	if previewCamera and previewCenter then
+		previewCamera.CFrame = CFrame.lookAt(
+			previewCenter + Vector3.new(0, 1, -zoomDistance),
+			previewCenter
+		)
+	end
+end
 
 local rotateConnection
 
@@ -99,9 +130,9 @@ local function createMannequinPreview(platformId)
 		rotateConnection = nil
 	end
 
-	local camera = Instance.new("Camera")
-	camera.Parent = PreviewViewPort
-	PreviewViewPort.CurrentCamera = camera
+	previewCamera = Instance.new("Camera")
+	previewCamera.Parent = PreviewViewPort
+	PreviewViewPort.CurrentCamera = previewCamera
 
 	local plot = workspace.Plots:FindFirstChild(player.UserId)
 
@@ -136,10 +167,9 @@ local function createMannequinPreview(platformId)
 	local cf, size = clone:GetBoundingBox()
 	local center = cf.Position
 
-	camera.CFrame = CFrame.lookAt(
-		center + Vector3.new(0, 1, -size.Y),
-		center
-	)
+	previewCenter = center
+	zoomDistance = size.Y -- Reset zoom when opening a new mannequin
+	updatePreviewCamera()
 
 	rotateConnection = RunService.RenderStepped:Connect(function()
 		if clone.Parent then
@@ -150,56 +180,13 @@ local function createMannequinPreview(platformId)
 	return clone
 end
 
-local function createPreview(asset, viewport)
+local function createPreview(asset, frame)
 
-	viewport:ClearAllChildren()
+	frame.Image =
+		"https://www.roblox.com/asset-thumbnail/image?assetId="
+		.. asset.AssetId
+		.. "&width=420&height=420&format=png"
 
-	local camera = Instance.new("Camera")
-	camera.Parent = viewport
-	viewport.CurrentCamera = camera
-
-	local preview = ReplicatedAssets:FindFirstChild(
-		tostring(asset.AssetId)
-	)
-
-	if not preview then
-		warn("Missing preview:", asset.AssetId)
-		return
-	end
-
-	local handle = preview:FindFirstChild("Handle")
-
-	if not handle then
-		warn("Handle missing:", asset.AssetId)
-		return
-	end
-
-	local clone = handle:Clone()
-
-	clone.Parent = viewport
-
-	clone.Anchored = true
-
-	local assetData = AssetDatabase[asset.AssetId]
-
-	local distance = 3
-	local height = 0
-	local rotation = Vector3.new(0, 180, 0)
-
-	if assetData and assetData.Camera then
-		distance = assetData.Camera.Distance or distance
-		height = assetData.Camera.Height or height
-		rotation = assetData.Camera.Rotation or rotation
-	end
-
-	clone.CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(rotation.X), math.rad(rotation.Y), math.rad(rotation.Z))
-
-	camera.CFrame = CFrame.lookAt(
-		clone.Position + Vector3.new(0, height, distance),
-		clone.Position + Vector3.new(0, height, 0)
-	)
-
-	return clone
 end
 
 local function createItemFrame(asset)
@@ -244,7 +231,7 @@ local function createItemFrame(asset)
 
 	task.spawn(function()
 
-		createPreview(asset, frame:WaitForChild("ViewportFrame"))
+		createPreview(asset, frame:WaitForChild("ViewItem"))
 
 		frame.Visible = true
 	end)
@@ -281,7 +268,7 @@ local function createItemFrame(asset)
 			or accessoryType == Enum.AccessoryType.LeftShoe
 			or accessoryType == Enum.AccessoryType.RightShoe
 			or accessoryType == Enum.AccessoryType.TShirt then
-			
+
 			local accessories = description:GetAccessories(true)
 
 			table.insert(accessories, {
@@ -293,38 +280,70 @@ local function createItemFrame(asset)
 
 			description:SetAccessories(accessories, true)
 
+			if accessoryType == Enum.AccessoryType.TShirt then
+				OutfitData.TShirtAccessory = assetId
+			elseif accessoryType == Enum.AccessoryType.Shirt then
+				OutfitData.ShirtAccessory = assetId
+			elseif accessoryType == Enum.AccessoryType.Pants then
+				OutfitData.PantsAccessory = assetId
+			elseif accessoryType == Enum.AccessoryType.Jacket then
+				OutfitData.JacketAccessory = assetId
+			elseif accessoryType == Enum.AccessoryType.Sweater then
+				OutfitData.SweaterAccessory = assetId
+			elseif accessoryType == Enum.AccessoryType.Shorts then
+				OutfitData.ShortsAccessory = assetId
+			elseif accessoryType == Enum.AccessoryType.LeftShoe then
+				OutfitData.LeftShoeAccessory = assetId
+			elseif accessoryType == Enum.AccessoryType.RightShoe then
+				OutfitData.RightShoeAccessory = assetId
+			elseif accessoryType == Enum.AccessoryType.DressSkirt then
+				OutfitData.DressSkirtAccessory = assetId
+			elseif accessoryType == Enum.AccessoryType.Eyebrow then
+				OutfitData.EyebrowAccessory = assetId
+			elseif accessoryType == Enum.AccessoryType.Eyelash then
+				OutfitData.EyelashAccessory = assetId
+			end
+
 		-- Classic Accessories
 		elseif accessoryType == Enum.AccessoryType.Hat then
-			
+
 			description.HatAccessory = description.HatAccessory .. "," .. assetId
+			OutfitData.Hat = assetId
 
 		elseif accessoryType == Enum.AccessoryType.Hair then
-			
+
 			description.HairAccessory = description.HairAccessory .. "," .. assetId
+			OutfitData.Hair = assetId
 
 		elseif accessoryType == Enum.AccessoryType.Face then
-			
+
 			description.FaceAccessory = description.FaceAccessory .. "," .. assetId
+			OutfitData.FaceAccessory = assetId
 
 		elseif accessoryType == Enum.AccessoryType.Neck then
-			
+
 			description.NeckAccessory = description.NeckAccessory .. "," .. assetId
+			OutfitData.NeckAccessory = assetId
 
 		elseif accessoryType == Enum.AccessoryType.Shoulder then
-			
+
 			description.ShoulderAccessory = description.ShoulderAccessory .. "," .. assetId
+			OutfitData.ShoulderAccessory = assetId
 
 		elseif accessoryType == Enum.AccessoryType.Front then
-			
+
 			description.FrontAccessory = description.FrontAccessory .. "," .. assetId
+			OutfitData.FrontAccessory = assetId
 
 		elseif accessoryType == Enum.AccessoryType.Back then
-			
+
 			description.BackAccessory = description.BackAccessory .. "," .. assetId
+			OutfitData.BackAccessory = assetId
 
 		elseif accessoryType == Enum.AccessoryType.Waist then
-			
+
 			description.WaistAccessory = description.WaistAccessory .. "," .. assetId
+			OutfitData.WaistAccessory = assetId
 		end
 
 		Humanoid:ApplyDescription(description)
@@ -365,6 +384,60 @@ template.Visible = false
 StatusLabel.Visible = false
 
 loadInventory()
+updateInventoryCount()
+
+StatsButton.MouseEnter:Connect(function()
+	StatsFrame.Visible = true
+
+	NextButton.Visible = false
+	PrevButton.Visible = false
+	SlotsFrame.Visible = false
+end)
+
+StatsButton.MouseLeave:Connect(function()
+	StatsFrame.Visible = false
+
+	NextButton.Visible = true
+	PrevButton.Visible = true
+	SlotsFrame.Visible = true
+end)
+
+HideButton.MouseButton1Click:Connect(function()
+	setTaggedObjectsVisible(false)
+
+	HideButton.Visible = false
+	ShowButton.Visible = true
+end)
+
+ShowButton.MouseButton1Click:Connect(function()
+	setTaggedObjectsVisible(true)
+
+	ShowButton.Visible = false
+	HideButton.Visible = true
+end)
+
+ZoomInButton.MouseButton1Click:Connect(function()
+	zoomDistance = math.max(MIN_ZOOM, zoomDistance - 0.5)
+	updatePreviewCamera()
+end)
+
+ZoomOutButton.MouseButton1Click:Connect(function()
+	zoomDistance = math.min(MAX_ZOOM, zoomDistance + 0.5)
+	updatePreviewCamera()
+end)
+
+NextButton.MouseButton1Click:Connect(function()
+	scroll(SCROLL_AMOUNT)
+end)
+
+PrevButton.MouseButton1Click:Connect(function()
+	scroll(-SCROLL_AMOUNT)
+end)
+
+SaveButton.MouseButton1Click:Connect(function()
+
+	SaveOutfitMannequinRemote:FireServer(player, OutfitData)
+end)
 
 OpenMannequinCustomizationUIRemote.OnClientEvent:Connect(function(mannequinId, platformId)
 
@@ -373,6 +446,7 @@ OpenMannequinCustomizationUIRemote.OnClientEvent:Connect(function(mannequinId, p
 
 	createMannequinPreview(platformId)
 end)
+
 
 UpdateInventoryUIRemote.OnClientEvent:Connect(function(update)
 

@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
+local MarketplaceService = game:GetService("MarketplaceService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
@@ -8,9 +9,11 @@ local GradeDatabase = require(ReplicatedStorage.Shared.Databases.GradeDatabase)
 local AssetDatabase = require(ReplicatedStorage.Shared.Databases.AssetsDatabase)
 
 local ReplicatedAssets = ReplicatedStorage:WaitForChild("Assets")	
+local PreviewAssets = ReplicatedStorage:WaitForChild("PreviewAssets")
 
 local GetPlayerDataRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.GetPlayerDataRemote)
 local UpdateInventoryUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateInventoryUIRemote)
+local GetAsset3DPreviewRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.GetAsset3DPreviewRemote)
 
 local PlayerData = GetPlayerDataRemote:InvokeServer()
 
@@ -21,12 +24,7 @@ end
 
 local player = Players.LocalPlayer
 
-local GetMainGui = require(
-	player:WaitForChild("PlayerScripts")
-		:WaitForChild("Client")
-		:WaitForChild("Shared")
-		:WaitForChild("GetMainGui")
-)
+local GetMainGui = require(player:WaitForChild("PlayerScripts"):WaitForChild("Client"):WaitForChild("Shared"):WaitForChild("GetMainGui"))
 
 local MainGui = GetMainGui()
 
@@ -46,25 +44,25 @@ local DetailsMutationLabel = DetailsFrame:WaitForChild("MutationLabel")
 local DetailsAssetNameLabel = DetailsFrame:WaitForChild("AssetNameLabel")
 local DetailsIncomeLabel = DetailsFrame:WaitForChild("IncomeLabel")
 local DetailsCreatorLabel = DetailsFrame:WaitForChild("CreatorLabel")
-local DetailsViewport = DetailsFrame:WaitForChild("ViewportFrame")
+
+local Button3D = DetailsFrame:WaitForChild("Button3D")
+local Button2D = DetailsFrame:WaitForChild("Button2D")
+local ViewAsset3D = DetailsFrame:WaitForChild("ViewAsset3D")
+local ViewAsset2D = DetailsFrame:WaitForChild("ViewAsset2D")
+
+local CatalogButton = DetailsFrame:WaitForChild("CatalogButton")
 
 local rotatingHandle
 local rotateConnection
 
--- local uiListLayout = InventoryGui:FindFirstChildWhichIsA("UIListLayout", true)
-
---------------------------------------------------------
--- DATA
---------------------------------------------------------
-
 local assets = {}
 local inventoryFrames = {}
+
+local MAX_INVENTORY = 100
 
 for _, assetData in pairs(PlayerData.Assets or {}) do
 	table.insert(assets, assetData)
 end
-
-local MAX_INVENTORY = 100
 
 local function updateInventoryCount()
 	CapacityLabel.Text = string.format("Capacity: %d/%d", #assets, MAX_INVENTORY)
@@ -74,40 +72,45 @@ local function getAssetKey(assetId, mutation, grade)
 	return tostring(assetId) .. "_" .. mutation .. "_" .. grade
 end
 
-updateInventoryCount()
+local function createThumbnail(asset, imageLabel)
 
---------------------------------------------------------
--- CREATE PREVIEW
---------------------------------------------------------
+	imageLabel.Image =
+		"https://www.roblox.com/asset-thumbnail/image?assetId="
+		.. asset.AssetId
+		.. "&width=420&height=420&format=png"
 
-local function createPreview(asset, viewport)
+end
 
-	viewport:ClearAllChildren()
+local function createPreview(asset, frame, previewType)
 
-	local camera = Instance.new("Camera")
-	camera.Parent = viewport
-	viewport.CurrentCamera = camera
+	if previewType == "2D" then
+		frame.Image =
+			"https://www.roblox.com/asset-thumbnail/image?assetId="
+			.. asset.AssetId
+			.. "&width=420&height=420&format=png"
 
-	local preview = ReplicatedAssets:FindFirstChild(
-		tostring(asset.AssetId)
-	)
-
-	if not preview then
-		warn("Missing preview:", asset.AssetId)
 		return
 	end
 
-	local handle = preview:FindFirstChild("Handle")
+	-- 3D Preview
+	frame:ClearAllChildren()
 
+	local camera = Instance.new("Camera")
+	camera.Parent = frame
+	frame.CurrentCamera = camera
+
+	GetAsset3DPreviewRemote:InvokeServer(asset.AssetId)
+
+	local preview = PreviewAssets:WaitForChild(tostring(asset.AssetId))
+
+	local handle = preview:FindFirstChild("Handle")
 	if not handle then
 		warn("Handle missing:", asset.AssetId)
 		return
 	end
 
 	local clone = handle:Clone()
-
-	clone.Parent = viewport
-
+	clone.Parent = frame
 	clone.Anchored = true
 
 	local assetData = AssetDatabase[asset.AssetId]
@@ -123,7 +126,7 @@ local function createPreview(asset, viewport)
 	end
 
 	clone.CFrame =
-		CFrame.new(0, 0, 0)
+		CFrame.new()
 		* CFrame.Angles(
 			math.rad(rotation.X),
 			math.rad(rotation.Y),
@@ -138,48 +141,33 @@ local function createPreview(asset, viewport)
 	return clone
 end
 
-local function updateDetails(asset)
+local function updateDetailsFrame(asset)
 
 	DetailsGradeLabel.Text = asset.Grade
-
 	DetailsGradeLabel.BackgroundColor3 = GradeDatabase[asset.Grade].Color
+
 	DetailsMutationLabel.Text = asset.Mutation or "Normal"
 	DetailsAssetNameLabel.Text = asset.Name or "Unknown"
 	DetailsIncomeLabel.Text = string.format("$%s/sec", tostring(asset.Income or 0))
-
-	DetailsCreatorLabel.Text = asset.Creator or "Roblox"
+	DetailsCreatorLabel.Text = "© " .. (asset.Creator or "Unknown")
 
 	DetailsFrame:SetAttribute("AssetId", asset.AssetId)
 
-	if rotateConnection then
-		rotateConnection:Disconnect()
-		rotateConnection = nil
-	end
+	-- Default to 2D
+	ViewAsset2D.Visible = true
+	ViewAsset3D.Visible = false
 
-	rotatingHandle = createPreview(asset, DetailsViewport)
+	Button3D.Visible = true
+	Button2D.Visible = false
 
-	if rotatingHandle then
-		rotateConnection = RunService.RenderStepped:Connect(function()
-			if rotatingHandle.Parent then
-				rotatingHandle.CFrame *= CFrame.Angles(0, math.rad(1), 0)
-			end
-		end)
-	end
+	createPreview(asset, ViewAsset2D, "2D")
 end
-
---------------------------------------------------------
--- CREATE ITEM FRAME
---------------------------------------------------------
 
 local function createItemFrame(asset)
 
     StatusLabel.Visible = false
 
-	local key = getAssetKey(
-		asset.AssetId,
-		asset.Mutation,
-		asset.Grade
-	)
+	local key = getAssetKey(asset.AssetId, asset.Mutation, asset.Grade)
 
 	if inventoryFrames[key] then
 		return inventoryFrames[key]
@@ -212,24 +200,24 @@ local function createItemFrame(asset)
 
 	task.spawn(function()
 
-		createPreview(asset, frame:WaitForChild("ViewportFrame"))
+		createThumbnail(
+			asset,
+			frame:WaitForChild("ViewItem")
+		)
 
 		frame.Visible = true
 	end)
 
 	frame.MouseButton1Click:Connect(function()
-		updateDetails(asset)
+		updateDetailsFrame(asset)
+
+		DetailsFrame:SetAttribute("AssetId", asset.AssetId)
 
 		DetailsFrame.Visible = true
-
 	end)
 
 	return frame
 end
-
---------------------------------------------------------
--- LOAD PAGE
--------------------------------------------------------- 
 
 local function loadInventory()
 
@@ -267,10 +255,64 @@ template.Visible = false
 StatusLabel.Visible = false
 
 loadInventory()
+updateInventoryCount()
 
---------------------------------------------------------
--- LIVE INVENTORY UPDATE
---------------------------------------------------------
+
+Button3D.MouseButton1Click:Connect(function()
+	ViewAsset2D.Visible = false
+	ViewAsset3D.Visible = true
+
+	Button3D.Visible = false
+	Button2D.Visible = true
+
+	if rotateConnection then
+		rotateConnection:Disconnect()
+		rotateConnection = nil
+	end
+
+	local assetId = DetailsFrame:GetAttribute("AssetId")
+
+	if not assetId then
+		warn("No Asset Id for 3D")
+		return
+	end
+
+	local assetData = AssetDatabase[assetId]
+
+	if not assetData then
+		warn("No Asset Data for: ", assetId)
+		return
+	end
+
+	rotatingHandle = createPreview(assetData, ViewAsset3D, "3D")
+
+	if rotatingHandle then
+		rotateConnection = RunService.RenderStepped:Connect(function()
+			if rotatingHandle.Parent then
+				rotatingHandle.CFrame *= CFrame.Angles(0, math.rad(1), 0)
+			end
+		end)
+	end
+end)
+
+Button2D.MouseButton1Click:Connect(function()
+	ViewAsset2D.Visible = true
+	ViewAsset3D.Visible = false
+
+	Button3D.Visible = true
+	Button2D.Visible = false
+end)
+
+
+CatalogButton.MouseButton1Click:Connect(function()
+	local assetId = DetailsFrame:GetAttribute("AssetId")
+
+	if assetId then
+		MarketplaceService:PromptOpenBrowserWindow(
+			"https://www.roblox.com/catalog/" .. assetId
+		)
+	end
+end)
 
 UpdateInventoryUIRemote.OnClientEvent:Connect(function(update)
 

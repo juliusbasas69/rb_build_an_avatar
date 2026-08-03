@@ -11,6 +11,10 @@ local Remotes = {
     GetPlayerDataRemote = "GetPlayerDataRemote",
     GetPreviewAssetsRemote = "GetPreviewAssetsRemote",
 
+    SaveOutfitMannequinRemote = "SaveOutfitMannequinRemote",
+
+    GetAsset3DPreviewRemote = "GetAsset3DPreviewRemote",
+
     PopupUIBindable = "PopupUIBindable",
 }
 

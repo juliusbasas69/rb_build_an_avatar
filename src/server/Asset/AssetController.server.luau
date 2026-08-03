@@ -1,12 +1,19 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local InsertService = game:GetService("InsertService")
 
+local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Tags = require(ReplicatedStorage.Shared.Tags)
+
+local PreviewAssets = ReplicatedStorage.PreviewAssets
+
+local GetAsset3DPreviewRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.GetAsset3DPreviewRemote)
 
 local AssetService = require(ServerScriptService.Server.Asset.AssetService)
 
 local connectedPrompts = {}
+local cache = {}
 
 local function connectPrompt(prompt, callback)
 	if connectedPrompts[prompt] then
@@ -35,3 +42,39 @@ end
 CollectionService:GetInstanceAddedSignal(Tags.BuyAssetPrompt):Connect(function(prompt)
 	handleBuyAssetPrompt(prompt)
 end)
+
+GetAsset3DPreviewRemote.OnServerInvoke = function(player, assetId)
+
+	if cache[assetId] then
+		return cache[assetId]:Clone()
+	end
+
+	local success, asset = pcall(function()
+		return InsertService:LoadAsset(assetId)
+	end)
+
+	if not success then
+		warn(asset)
+		return nil
+	end
+
+	local accessory = asset:FindFirstChildWhichIsA("Accessory", true)
+
+	if not accessory then
+		warn("No accessory:", assetId)
+		asset:Destroy()
+		return nil
+	end
+
+	-- Clone for the cache
+	local cachedAccessory = accessory:Clone()
+	cachedAccessory.Name = tostring(assetId)
+	cachedAccessory.Parent = PreviewAssets
+
+	cache[assetId] = cachedAccessory
+
+	--asset:Destroy()
+
+	-- Return a separate clone
+	return cachedAccessory:Clone()
+end
