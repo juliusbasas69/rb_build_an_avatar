@@ -102,9 +102,7 @@ function PlotService:AssignPlot(player)
 
 	local plot = availablePlots[math.random(1, #availablePlots)]
 
-	plot:SetAttribute("Occupied", true)
 	plot:SetAttribute("OwnerId", player.UserId)
-	plot:SetAttribute("OwnerName", player.Name)
 	plot:SetAttribute("PortalLevel", 1)
 	plot:SetAttribute("PortalSpeed", 8)
 
@@ -132,10 +130,9 @@ function PlotService:ReleasePlot(player)
 		return
 	end
 
-	plot:SetAttribute("Occupied", false)
 	plot:SetAttribute("OwnerId", nil)
-	plot:SetAttribute("OwnerName", nil)
 	plot:SetAttribute("PortalLevel", 1)
+	plot:SetAttribute("PortalSpeed", 8)
 
 	plot.Name = "Plot"
 

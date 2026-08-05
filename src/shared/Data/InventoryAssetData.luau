@@ -1,4 +1,4 @@
-local AssetData = {
+local InventoryAssetData = {
     AssetId = "",
     Name = "",
     Quantity = 0,
@@ -8,4 +8,4 @@ local AssetData = {
     Type = "",
 }
 
-return AssetData
+return InventoryAssetData

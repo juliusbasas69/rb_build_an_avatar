@@ -1,20 +1,22 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local PlayerScripts = Player:WaitForChild("PlayerScripts")
 
+local GuiUtil = require(PlayerScripts.Client.Shared.Util.GuiUtil)
+
+local MainGui = GuiUtil:GetMainGui()
+local MenuGui = MainGui:WaitForChild("MenuGui")
 
 local Tags = require(ReplicatedStorage.Shared.Tags)
 
 local function ConnectExitButton(exitButton)
 	exitButton.MouseButton1Click:Connect(function()
 
-        local Player = Players.LocalPlayer
-        local PlayerGui = Player:WaitForChild("PlayerGui")
-        local MainGui = PlayerGui:WaitForChild("MainGui")
-
 		exitButton.Parent.Parent.Visible = false
 		
-		MainGui.Menu.Visible = true
+		MenuGui.Visible = true
 	end)
 end
 

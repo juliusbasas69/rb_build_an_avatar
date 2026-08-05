@@ -4,42 +4,22 @@ local CollectionService = game:GetService("CollectionService")
 
 local ProximityPromptFactory = require(ServerScriptService.Server.Shared.ProximityPromptFactory)
 local PlayerService = require(ServerScriptService.Server.Player.PlayerService)
+local TableClone = require(ReplicatedStorage.Shared.Util.TableClone)
 local Tags = require(ReplicatedStorage.Shared.Tags)
 
 local PlacedMannequinData = require(ReplicatedStorage.Shared.Data.PlacedMannequinData)
 
 local MannequinService = {}
 
-local function DeepClone(tbl)
-	local clone = {}
-
-	for key, value in pairs(tbl) do
-		if type(value) == "table" then
-			clone[key] = DeepClone(value)
-		else
-			clone[key] = value
-		end
-	end
-
-	return clone
-end
-
 local function PlaceMannequinOnPlatform(model, spawnPart)
 	local _, size = model:GetBoundingBox()
 
-	local offset = CFrame.new(0, size.Y / 2, 0) * CFrame.Angles(0, math.rad(180), 0)
+	local offset = CFrame.new(0, size.Y / 1.35, 0) * CFrame.Angles(0, math.rad(180), 0)
 
 	model:PivotTo(spawnPart.CFrame * offset)
 end
 
-function MannequinService:PlaceMannequin(player, plot, platformId, mannequinId) : boolean
-
-	local PlayerData = PlayerService:GetPlayer(player)
-
-	if not PlayerData then
-		warn("PlayerData not found for player: " .. player.Name)
-		return false
-	end
+function MannequinService:PlaceMannequin(plot, platformId, mannequinId) : boolean
 
 	local platformsFolder = plot:WaitForChild("Platforms")
 	local platformModel = platformsFolder:FindFirstChild(platformId)
@@ -95,32 +75,31 @@ function MannequinService:PlaceMannequin(player, plot, platformId, mannequinId) 
         CollectionService:AddTag(prompt, Tags.OpenMannequinCustomizationUITag)
     end
 
-	local placedMannequin = DeepClone(PlacedMannequinData)
-	placedMannequin.MannequinId = mannequinId
-
-	PlayerData.Platforms[platformId].MannequinId = mannequinId
-	PlayerData.Platforms[platformId].HasMannequin = true
-	PlayerData.Platforms[platformId].PlacedMannequin = placedMannequin
-
-	PlayerService:UpdatePlayer(player)
-
 	PlaceMannequinOnPlatform(clone, stand)
 
 	return true
 end
 
 function MannequinService:LoadMannequins(player, plot)
-	local PlayerData = PlayerService:GetPlayer(player)
+	local playerData = PlayerService:GetPlayer(player)
 
-	if not PlayerData then
+	if not playerData then
 		warn("PlayerData not found for player: " .. player.Name)
 		return
 	end
 
+	local inventory = playerData.Inventory
+	local platforms = playerData.Platforms
+	local mannequins = inventory.Mannequins
+
 	local platformsFolder = plot:WaitForChild("Platforms")
 
-	for platformId, platformData in pairs(PlayerData.Platforms) do
-		if platformData.HasMannequin and platformData.MannequinId then
+	for platformId, platformData in pairs(platforms) do
+		if platformData.HasMannequin then
+
+			local placedMannequin = platformData.PlacedMannequin
+			local mannequinId = placedMannequin.MannequinId
+
 			local platformModel = platformsFolder:FindFirstChild(platformId)
 
 			if platformModel then
@@ -130,7 +109,7 @@ function MannequinService:LoadMannequins(player, plot)
 					prompt.Enabled = false
 				end
 
-				self:PlaceMannequin(player, plot, platformId, platformData.MannequinId)
+				self:PlaceMannequin(plot, platformId, mannequinId)
 			else
 				warn("Platform P" .. platformId .. " not found.")
 			end

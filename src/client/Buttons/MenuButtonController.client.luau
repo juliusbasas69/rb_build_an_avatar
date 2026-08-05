@@ -2,15 +2,12 @@ local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
-local player = Players.LocalPlayer
-local GetMainGui = require(
-	player:WaitForChild("PlayerScripts")
-		:WaitForChild("Client")
-		:WaitForChild("Shared")
-		:WaitForChild("GetMainGui")
-)
+local Player = Players.LocalPlayer
+local PlayerScripts = Player:WaitForChild("PlayerScripts")
 
-local MainGui = GetMainGui()
+local GuiUtil = require(PlayerScripts:WaitForChild("Client").Shared.Util.GuiUtil)
+
+local MainGui = GuiUtil:GetMainGui()
 
 local Tags = require(ReplicatedStorage.Shared.Tags)
 
@@ -18,7 +15,7 @@ local function ConnectMenuButton(menuButton)
 	menuButton.MouseButton1Click:Connect(function()
 		
 		if menuButton.Name == "StatsButton" then
-			MainGui.Stats.Visible = true
+			MainGui.StatsGui.Visible = true
 		elseif menuButton.Name == "ItemsButton" then
 			MainGui.InventoryGui.Visible = true
 		end

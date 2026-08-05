@@ -1,22 +1,15 @@
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local PlayerScripts = Player:WaitForChild("PlayerScripts")
 
+local GuiUtil = require(PlayerScripts.Client.Shared.Util.GuiUtil)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
-
 local PopupUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.PopupUIRemote)
 local PopupUIBindable = ReplicatedStorage.Remotes.BindableEvents:WaitForChild(Remotes.PopupUIBindable)
 
-local player = Players.LocalPlayer
-
-local GetMainGui = require(
-	player:WaitForChild("PlayerScripts")
-		:WaitForChild("Client")
-		:WaitForChild("Shared")
-		:WaitForChild("GetMainGui")
-)
-
-local MainGui = GetMainGui()
+local MainGui = GuiUtil:GetMainGui()
 
 local PopupFrame = MainGui:WaitForChild("Popup")
 local Template = PopupFrame:WaitForChild("Template")

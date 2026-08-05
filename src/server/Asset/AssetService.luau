@@ -9,14 +9,16 @@ local PlayerService = require(ServerScriptService.Server.Player.PlayerService)
 local AssetDatabase = require(ReplicatedStorage.Shared.Databases.AssetsDatabase)
 local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
 local GradeDatabase = require(ReplicatedStorage.Shared.Databases.GradeDatabase)
-local AssetData = require(ReplicatedStorage.Shared.Data.AssetData)
+local InventoryAssetData = require(ReplicatedStorage.Shared.Data.InventoryAssetData)
+
+local AssetKey = require(ReplicatedStorage.Shared.Util.AssetKey)
 
 local PopupUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.PopupUIRemote)
 local InventoryUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateInventoryUIRemote)
 
 local AssetService = {}
 
-function AssetService:BuyAsset(player, accessory)
+function AssetService:BuyAsset(player, asset)
 
 	local assetId = accessory:GetAttribute("AssetId")
 	local mutation = accessory:GetAttribute("Mutation") or "Normal"
@@ -62,7 +64,7 @@ function AssetService:BuyAsset(player, accessory)
 
 	player.PlayerData:SetAttribute("Gold", playerData.Gold)
 
-	local key = assetId .. "_" .. mutation .. "_" .. grade
+	local key = AssetKey:Create(assetId, grade, mutation)
 
 	local ownedAsset = playerData.Assets[key]
 

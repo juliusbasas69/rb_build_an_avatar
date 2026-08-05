@@ -8,13 +8,12 @@ local TweenService = game:GetService("TweenService")
 
 local BaseMannequin = ReplicatedStorage:WaitForChild("BaseMannequin")
 
+local Tags = require(ReplicatedStorage.Shared.Tags)
 local ProximityPromptFactory = require(ServerScriptService.Server.Shared.ProximityPromptFactory)
-
+local AssetKey = require(ReplicatedStorage.Shared.Util.AssetKey)
 local AssetRollService = require(ServerScriptService.Server.Asset.AssetRollService)
 local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
 local GradeDatabase = require(ReplicatedStorage.Shared.Databases.GradeDatabase)
-
-local CurrentAssets = {}
 
 --THIS IS GAMEPASS
 local assetCount = 5
@@ -22,7 +21,12 @@ local speed = 8
 
 local PortalService = {}
 
-local function applyAsset(humanoid, asset)
+local function applyAsset(mannequin, asset)
+
+	print(mannequin)
+
+	local humanoid = mannequin:WaitForChild("Humanoid")
+
 	local description = humanoid:GetAppliedDescription()
 
 	local accessoryType = asset.AccessoryType
@@ -89,7 +93,6 @@ local function applyAsset(humanoid, asset)
 	humanoid:ApplyDescription(description)
 end
 
-
 local function updateAssetInfo(mannequin, asset, grade, mutation)
 
 	local head = mannequin:FindFirstChild("Head")
@@ -101,10 +104,8 @@ local function updateAssetInfo(mannequin, asset, grade, mutation)
 		local gradeLabel = info:WaitForChild("GradeLabel")
 		local nameLabel = info:WaitForChild("NameLabel")
 		local costLabel = info:WaitForChild("CostLabel")
-	
-		mannequin:SetAttribute("AssetId", asset.AssetId)
-		mannequin:SetAttribute("Mutation", mutation)
-		mannequin:SetAttribute("Grade", grade)
+		
+		mannequin:SetAttribute("AssetKey", AssetKey:Create(asset.AssetId, grade, mutation))
 
 		mutationLabel.Text = mutation
 		mutationLabel.TextColor3 = MutationDatabase[mutation].Color or Color3.new(1, 1, 1)
@@ -123,113 +124,67 @@ local function updateAssetInfo(mannequin, asset, grade, mutation)
 		costLabel.Text = "$" .. math.floor(asset.Price * MutationDatabase[mutation].CostMultiplier)
 
 		costLabel.TextColor3 =Color3.fromRGB(255, 223, 0)
+
+		info.Enabled = true
 	end
 end
 
-local function moveAssets(models)
+local function moveMannequin(plot, mannequin, index)
+	
+	local portal = plot:FindFirstChild("Portal")
+	local stopPoints = portal:FindFirstChild("StopPoints")
 
-	for index, data in ipairs(models) do
+	local stopPoint
 
-		task.spawn(function()
-
-			local spawnDelay = (speed >= 16) and 0.35 or 0.7
-
-			task.wait((index - 1) * spawnDelay)
-
-			local plot = data.Plot
-			local spawnPoint = plot.Portal.SpawnPoint.SpawnPoint
-
-			local mannequin = BaseMannequin:Clone()
-			mannequin.Parent = plot
-			mannequin:PivotTo(spawnPoint.CFrame * CFrame.Angles(0, math.rad(180), 0))
-
-			local humanoid = mannequin:WaitForChild("Humanoid")
-
-			applyAsset(humanoid, data.Asset)
-
-			task.wait(0.2)
-
-			updateAssetInfo(
-				mannequin,
-				data.Asset,
-				data.Grade,
-				data.Mutation
-			)
-
-			local rootPart = mannequin:WaitForChild("HumanoidRootPart")
-			local destination = data.StopPoint
-
-			local distance = (rootPart.Position - destination.Position).Magnitude
-
-			local duration = distance / speed
-
-			local tween = TweenService:Create(
-				rootPart,
-				TweenInfo.new(
-					duration,
-					Enum.EasingStyle.Linear
-				),
-				{
-					Position = destination.Position
-				}
-			)
-
-			tween:Play()
-
-			tween.Completed:Wait()
-
-			for _, object in ipairs(mannequin:GetDescendants()) do
-				if object:IsA("BasePart") then
-
-					object.Anchored = true
-					object.CanCollide = false
-					object.CanTouch = false
-					object.CanQuery = false
-
-					object.CollisionGroup = "Mannequin"
-
-				end
-			end
-
-			local prompt = ProximityPromptFactory:Create({
-				Parent = rootPart,
-				ActionText = "Buy",
-				ObjectText = data.Asset.Name,
-			})
-
-			CollectionService:AddTag(
-				prompt,
-				"BuyAssetPrompt"
-			)
-			data.Model = mannequin
-		end)
+	if assetCount == 1 then
+		stopPoint = stopPoints:FindFirstChild("3")
+	elseif assetCount == 3 then
+		stopPoint = stopPoints:FindFirstChild(tostring(5 - index))
+	elseif assetCount == 5 then
+		stopPoint = stopPoints:FindFirstChild(tostring(6 - index))
 	end
+
+	local rootPart = mannequin:WaitForChild("HumanoidRootPart")
+	local destination = stopPoint
+
+	local distance = (rootPart.Position - destination.Position).Magnitude
+
+	local duration = distance / (speed)
+
+	local tween = TweenService:Create(
+		rootPart,
+		TweenInfo.new(
+			duration,
+			Enum.EasingStyle.Linear
+		),
+		{
+			Position = destination.Position
+		}
+	)
+
+	tween:Play()
+	tween.Completed:Wait()
 end
 
+local function destroyMannequin(plot)
 
+	local portal = plot:FindFirstChild("Portal")
+	local destroyPoint = portal:FindFirstChild("DestroyPoint"):FindFirstChild("DestroyPoint")
+	local portalMannequinsFolder = plot:FindFirstChild("PortalMannequins")
 
-local function destroyAssets(models, destroyPoint)
+	if not portalMannequinsFolder then
+		return
+	end
 
-	for _, data in ipairs(models) do
+	local destroyTasks = {}
 
-		task.spawn(function()
+	for _, mannequin in ipairs(portalMannequinsFolder:GetChildren()) do
+		
+		table.insert(destroyTasks, task.spawn(function()
 
-			local mannequin = data.Model
-
-			if not mannequin then
-				return
-			end
-
-			task.wait(0.1)
 			local rootPart = mannequin:WaitForChild("HumanoidRootPart")
-
-			if not rootPart then
-				warn("HumanoidRootPart missing:", mannequin:GetFullName())
-				return
-			end
 
 			local distance = (rootPart.Position - destroyPoint.Position).Magnitude
-
 			local duration = distance / speed
 
 			local tween = TweenService:Create(
@@ -244,95 +199,66 @@ local function destroyAssets(models, destroyPoint)
 			)
 
 			tween:Play()
-
 			tween.Completed:Wait()
 
-			if mannequin.Parent then
-				mannequin:Destroy()
-			end
-		end)
+			mannequin:Destroy()
+
+		end))
+	end
+
+	-- wait until all destroy animations finish
+	for _, thread in ipairs(destroyTasks) do
+		task.wait()
 	end
 end
 
-local function displayAsset(asset, grade, mutation, plot, index)
+local function setupMannequin(plot, asset, grade, mutation, index)
 
-	CurrentAssets[plot] = CurrentAssets[plot] or {}
+	local portal = plot:FindFirstChild("Portal")
+	local spawnPoint = portal:FindFirstChild("SpawnPoint"):FindFirstChild("SpawnPoint")
+	local portalMannequinsFolder = plot:FindFirstChild("PortalMannequins")
 
-	local stopPoints = plot.Portal.StopPoints:GetChildren()
+	local clone = BaseMannequin:Clone()
+	clone.Parent = portalMannequinsFolder
+	clone:PivotTo(spawnPoint.CFrame * CFrame.Angles(0, math.rad(180), 0))
 
-	table.sort(
-		stopPoints,
-		function(a,b)
-			return tonumber(a.Name) < tonumber(b.Name)
-		end
-	)
+	local prompt = ProximityPromptFactory:Create({
+		Parent = clone:FindFirstChild("HumanoidRootPart"),
+		ActionText = "Buy",
+		ObjectText = asset.Name,
+	})
 
-	local stopPoint
+	CollectionService:AddTag(prompt, Tags.BuyAssetPrompt)
 
-	if assetCount == 1 then
-		stopPoint = stopPoints[3]
+	task.spawn(function()
+		local moveDelay = (speed >= 16) and 0.25 or 0.35
 
-	elseif assetCount == 3 then
-		stopPoint = stopPoints[5 - index]
+		task.wait((index - 1) * moveDelay)
+		
+		updateAssetInfo(clone, asset, grade, mutation)
+		applyAsset(clone, asset)
 
-	elseif assetCount == 5 then
-		stopPoint = stopPoints[6 - index]
 
-	end
+		moveMannequin(plot, clone, index)
+	end)
 
-	if not stopPoint then
-		warn("No stop point found!")
-		return
-	end
-
-	table.insert(
-		CurrentAssets[plot],
-		{
-			Asset = asset,
-			Grade = grade,
-			Mutation = mutation,
-			StopPoint = stopPoint,
-			Plot = plot
-		}
-	)
 end
-
-
 
 function PortalService:SpawnAsset(player, plot)
 
-
-	local destroyPoint = plot.Portal.DestroyPoint.DestroyPoint
-
-	CurrentAssets[plot] = CurrentAssets[plot] or {}
-
-	destroyAssets(CurrentAssets[plot], destroyPoint)
-
-	table.clear(CurrentAssets[plot])
+	destroyMannequin(plot)
 
 	local portalLevel = plot:GetAttribute("PortalLevel")
 
-	for i = 1, assetCount do
-		local selectedAsset = AssetRollService:GetRandomAsset()
+	for index = 1, assetCount do
 
-		if not selectedAsset then
-			continue
-		end
-
+		local asset = AssetRollService:GetRandomAsset()
 		local grade = AssetRollService:RollGrade(portalLevel)
-
 		local mutation = AssetRollService:RollMutation()
 
-		displayAsset(
-			selectedAsset,
-			grade,
-			mutation,
-			plot,
-			i
-		)
-	end
+		setupMannequin(plot, asset, grade, mutation, index)
 
-	moveAssets(CurrentAssets[plot])
+	end
 end
 
 return PortalService

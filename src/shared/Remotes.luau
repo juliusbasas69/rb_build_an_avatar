@@ -1,19 +1,19 @@
 local Remotes = {
     OpenSettingsUIRemote = "OpenSettingsUIRemote",
-    OpenMannequinSelectorUIRemote = "OpenMannequinSelectorUIRemote",
+    OpenMannequinPickerUIRemote = "OpenMannequinPickerUIRemote",
     OpenMannequinCustomizationUIRemote = "OpenMannequinCustomizationUIRemote",    
-    UpdateMannequinSelectorUIRemote = "UpdateMannequinSelectorUIRemote",
+    UpdateMannequinPickerUIRemote = "UpdateMannequinPickerUIRemote",
     UpdateInventoryUIRemote = "UpdateInventoryUIRemote",
     PopupUIRemote = "PopupUIRemote",
 
-    PlaceMannequinRemote = "PlaceMannequinRemote",
+    RequestPlaceMannequinRemote = "RequestPlaceMannequinRemote",
 
-    GetPlayerDataRemote = "GetPlayerDataRemote",
+    RequestPlayerDataRemote = "RequestPlayerDataRemote",
     GetPreviewAssetsRemote = "GetPreviewAssetsRemote",
 
-    SaveOutfitMannequinRemote = "SaveOutfitMannequinRemote",
+    SaveMannequinOutfitRemote = "SaveMannequinOutfitRemote",
 
-    GetAsset3DPreviewRemote = "GetAsset3DPreviewRemote",
+    RequestAsset3DPreviewRemote = "RequestAsset3DPreviewRemote",
 
     PopupUIBindable = "PopupUIBindable",
 }

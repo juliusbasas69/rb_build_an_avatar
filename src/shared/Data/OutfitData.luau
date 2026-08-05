@@ -1,29 +1,31 @@
 local OutfitData = {
     -- Classic
-    Hair = 0,
+    Hair = "",
 
-    Hat = 0,
-    FaceAccessory = 0,
-    NeckAccessory = 0,
-    ShoulderAccessory = 0,
-    FrontAccessory = 0,
-    BackAccessory = 0,
-    WaistAccessory = 0,
+    Hat = "",
+    FaceAccessory = "",
+    NeckAccessory = "",
+    ShoulderAccessory = "",
+    FrontAccessory = "",
+    BackAccessory = "",
+    WaistAccessory = "",
 
     -- Layered Clothing
-    TShirtAccessory = 0,
-    ShirtAccessory = 0,
-    PantsAccessory = 0,
-    JacketAccessory = 0,
-    SweaterAccessory = 0,
-    ShortsAccessory = 0,
-    LeftShoeAccessory = 0,
-    RightShoeAccessory = 0,
-    DressSkirtAccessory = 0,
+    TShirtAccessory = "",
+    ShirtAccessory = "",
+    PantsAccessory = "",
+    JacketAccessory = "",
+    SweaterAccessory = "",
+    ShortsAccessory = "",
+    LeftShoeAccessory = "",
+    RightShoeAccessory = "",
+    DressSkirtAccessory = "",
 
     -- Face Accessories
-    EyebrowAccessory = 0,
-    EyelashAccessory = 0,
+    EyebrowAccessory = "",
+    EyelashAccessory = "",
 }
+
+export type OutfitData = typeof(OutfitData)
 
 return OutfitData

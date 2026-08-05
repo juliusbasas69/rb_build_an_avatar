@@ -5,9 +5,9 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local UserService = require(ServerScriptService.Server.Player.PlayerService)
 
-local GetPlayerDataRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.GetPlayerDataRemote)
+local RequestPlayerDataRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.RequestPlayerDataRemote)
 
-GetPlayerDataRemote.OnServerInvoke = function(player)
+RequestPlayerDataRemote.OnServerInvoke = function(player)
 
 	local playerData = UserService:GetPlayer(player)
 

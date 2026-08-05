@@ -17,158 +17,159 @@ local PlayerData = {
         x4MutationLuck = false,
     },
 
-    Assets = {},          -- Clothes, hats, accessories, etc.
-    Inventory = {},       -- Potions, tickets, keys, consumables
-    OwnedMannequins = {},
-    PlacedMannequins = {},
+    Inventory = {
+        Assets = {},
+        Mannequins = {},
+        Items = {},
+    },  
 
     Platforms = {
-        [1] = {
+        ["1"] = {
             Unlocked = true,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [2] = {
+        ["2"] = {
             Unlocked = true,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [3] = {
+        ["3"] = {
             Unlocked = true,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [4] = {
+        ["4"] = {
             Unlocked = true,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [5] = {
+        ["5"] = {
             Unlocked = true,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [6] = {
+        ["6"] = {
             Unlocked = true,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [7] = {
+        ["7"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [8] = {
+        ["8"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [9] = {
+        ["9"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [10] = {
+        ["10"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [11] = {
+        ["11"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [12] = {
+        ["12"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [13] = {
+        ["13"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [14] = {
+        ["14"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [15] = {
+        ["15"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [16] = {
+        ["16"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [17] = {
+        ["17"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [18] = {
+        ["18"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [19] = {
+        ["19"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [20] = {
+        ["20"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [21] = {
+        ["21"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [22] = {
+        ["22"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [23] = {
+        ["23"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [24] = {
+        ["24"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [25] = {
+        ["25"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [26] = {
+        ["26"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [27] = {
+        ["27"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [28] = {
+        ["28"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [29] = {
+        ["29"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,
         },
-        [30] = {
+        ["30"] = {
             Unlocked = false,
             PlacedMannequin = {},
             HasMannequin = false,

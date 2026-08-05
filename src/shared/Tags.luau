@@ -2,7 +2,7 @@ local Tags = {
 	ExitButton = "ExitButton",
 	BuyAssetPrompt = "BuyAssetPrompt",
 	Mannequin = "Mannequin",
-    OpenMannequinSelectorUITag = "OpenMannequinSelectorUITag",
+    OpenMannequinPickerUITag = "OpenMannequinPickerUITag",
     OpenMannequinCustomizationUITag = "OpenMannequinCustomizationUITag",
 
 	Conveyor = "Conveyor",

@@ -3,27 +3,15 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local DataService = require(ServerScriptService.Server.DataStore.DataStoreService)
 local PlayerData = require(ReplicatedStorage.Shared.Data.PlayerData)
-local OwnedMannequinData = require(ReplicatedStorage.Shared.Data.OwnedMannequinData)
+local InventoryMannequinData = require(ReplicatedStorage.Shared.Data.InventoryMannequinData)
+local PlacedMannequinData = require(ReplicatedStorage.Shared.Data.PlacedMannequinData)
+local TableClone = require(ReplicatedStorage.Shared.Util.TableClone)
 
 local PlayerCache = {}
 
 local PlayerService = {}
 
 local AUTOSAVE_INTERVAL = 60
-
-local function DeepClone(tbl)
-	local clone = {}
-
-	for key, value in pairs(tbl) do
-		if type(value) == "table" then
-			clone[key] = DeepClone(value)
-		else
-			clone[key] = value
-		end
-	end
-
-	return clone
-end
 
 function PlayerService:UserInitial(player)
 
@@ -35,13 +23,14 @@ function PlayerService:UserInitial(player)
 
 	if not data then
 
-		data = DeepClone(PlayerData)
+		data = TableClone:Deep(PlayerData)
 
-		local starterMannequin = table.clone(OwnedMannequinData)
+		local starterMannequin = table.clone(InventoryMannequinData)
 		starterMannequin.Id = "47221299427770"
+		starterMannequin.Name = "F15 Boy"
 		starterMannequin.Quantity = 999
 
-		data.OwnedMannequins["47221299427770"] = starterMannequin
+		data.Inventory.Mannequins["47221299427770"] = starterMannequin
 
 		DataService:SavePlayer(player, data)
 	end
@@ -106,6 +95,40 @@ task.spawn(function()
 		end
 	end
 end)
+
+function PlayerService:UpdatePlayerMannequins(player, platformId, mannequinId)
+
+	local playerData = self:GetPlayer(player)
+
+	if not PlayerData then
+		warn("PlayerData not found for player: " .. player.Name)
+		return false
+	end
+
+	local inventory = playerData.Inventory
+	local mannequins = inventory.Mannequins
+	local platforms = playerData.Platforms
+
+	local placedMannequin = TableClone:Deep(PlacedMannequinData)
+	placedMannequin.MannequinId = mannequinId
+
+	platforms[platformId].HasMannequin = true
+	platforms[platformId].PlacedMannequin = placedMannequin
+
+	print(typeof(mannequinId))
+	print(mannequins)
+	local mannequin = mannequins[mannequinId]
+	print(mannequin)
+
+    if mannequin.Quantity > 1 then
+
+        mannequin.Quantity -= 1
+    else
+        mannequins[mannequinId] = nil
+    end
+
+	return true
+end
 
 
 

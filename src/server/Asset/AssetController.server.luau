@@ -8,7 +8,7 @@ local Tags = require(ReplicatedStorage.Shared.Tags)
 
 local PreviewAssets = ReplicatedStorage.PreviewAssets
 
-local GetAsset3DPreviewRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.GetAsset3DPreviewRemote)
+local RequestAsset3DPreviewRemote = ReplicatedStorage.Remotes.Functions:WaitForChild(Remotes.RequestAsset3DPreviewRemote)
 
 local AssetService = require(ServerScriptService.Server.Asset.AssetService)
 
@@ -44,7 +44,7 @@ CollectionService:GetInstanceAddedSignal(Tags.BuyAssetPrompt):Connect(function(p
 	handleBuyAssetPrompt(prompt)
 end)
 
-GetAsset3DPreviewRemote.OnServerInvoke = function(player, assetId)
+RequestAsset3DPreviewRemote.OnServerInvoke = function(player, assetId)
 
 	if cache[assetId] then
 		return cache[assetId]:Clone()

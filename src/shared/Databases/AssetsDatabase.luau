@@ -1,5 +1,5 @@
 local AssetsDatabase = {
-	[130708845795870] = {
+	["130708845795870"] = {
 		Name = "Woof Hoodie Monochrome",
 		AssetId = 130708845795870,
 		AccessoryType = Enum.AccessoryType.Jacket,
@@ -12,7 +12,7 @@ local AssetsDatabase = {
 			PreviewRotation = Vector3.new(0, 180, 0),
 		}
 	},
-	[17896926875] = {
+	["17896926875"] = {
 		Name = "Black Winged Hoodie Jacket",
 		AssetId = 17896926875,
 		AccessoryType = Enum.AccessoryType.Jacket,
