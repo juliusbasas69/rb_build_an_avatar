@@ -34,7 +34,7 @@ local opacityInfo = {
 local ActivePopups = {}
 
 local function ShowPopup(message)
-	local key = message.Id or message.Text
+	local key = message.Text
 
 	local popup = ActivePopups[key]
 

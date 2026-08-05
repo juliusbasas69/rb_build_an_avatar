@@ -13,95 +13,105 @@ local InventoryAssetData = require(ReplicatedStorage.Shared.Data.InventoryAssetD
 
 local AssetKey = require(ReplicatedStorage.Shared.Util.AssetKey)
 
-local PopupUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.PopupUIRemote)
-local InventoryUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateInventoryUIRemote)
-
 local AssetService = {}
 
 function AssetService:BuyAsset(player, asset)
 
-	local assetId = accessory:GetAttribute("AssetId")
-	local mutation = accessory:GetAttribute("Mutation") or "Normal"
-	local grade = accessory:GetAttribute("Grade") or "Low"
+	local assetKey = asset:GetAttribute("AssetKey")
+
+	local parsed  = AssetKey:Parse(assetKey)
+
+	local assetId = parsed.AssetId
+	local grade = parsed.Grade
+	local mutation = parsed.Mutation
 
 	if not assetId then
 		warn("Missing AssetId")
-		return false
+		return false, {
+			Success = false,
+			Message = Messages.ServerError,
+		}
 	end
 
 	local mutationData = MutationDatabase[mutation]
 
 	if not mutationData then
 		warn("Missing mutation:", mutation)
-		return false
+		return false, {
+			Success = false,
+			Message = Messages.ServerError,
+		}
 	end
 
 	local gradeData = GradeDatabase[grade]
 
 	if not gradeData then
 		warn("Missing grade:", grade)
-		return false
+		return false, {
+			Success = false,
+			Message = Messages.ServerError,
+		}
 	end
 
 	local playerData = PlayerService:GetPlayer(player)
-	local asset = AssetDatabase[assetId]
 
-	if not asset then
-		warn("Missing asset:", assetId)
-		return false
+	if not playerData then
+		warn("No Player Data found for: ", player)
+		return false, {
+			Success = false,
+			Message = Messages.ServerError,
+		}
 	end
 
-	local price = math.floor(asset.Price * mutationData.CostMultiplier * gradeData.CostMultiplier)
+	local assetData = AssetDatabase[assetId]
+
+	if not assetData then
+		warn("Missing asset:", assetId)
+		return false, {
+			Success = false,
+			Message = Messages.ServerError,
+		}
+	end
+
+	local price = math.floor(assetData.Price * mutationData.CostMultiplier * gradeData.CostMultiplier)
 
 	if playerData.Gold < price then
-
-		PopupUIRemote:FireClient(player, Messages.NotEnoughGold)
-
-		return false
+		return false, {
+			Success = false,
+			Message = Messages.NotEnoughGold
+		}
 	end
 
 	playerData.Gold -= price
+	player:SetAttribute("Gold", playerData.Gold)
 
-	player.PlayerData:SetAttribute("Gold", playerData.Gold)
-
-	local key = AssetKey:Create(assetId, grade, mutation)
-
-	local ownedAsset = playerData.Assets[key]
-
+	local ownedAsset = playerData.Inventory.Assets[assetKey]
 	local isNew = false
 
 	if ownedAsset then
-
 		ownedAsset.Quantity += 1
 	else
-
 		isNew = true
-		ownedAsset = table.clone(AssetData)
+		ownedAsset = table.clone(InventoryAssetData)
 		ownedAsset.AssetId = assetId
-		ownedAsset.Name = asset.Name
+		ownedAsset.Name = assetData.Name
 		ownedAsset.Quantity = 1
 		ownedAsset.Grade = grade
 		ownedAsset.Mutation = mutation
-		ownedAsset.Income = asset.Income * mutationData.IncomeMultiplier * gradeData.IncomeMultiplier
+		ownedAsset.Income = assetData.Income * mutationData.IncomeMultiplier * gradeData.IncomeMultiplier
 
-		playerData.Assets[key] = ownedAsset
+		playerData.Inventory.Assets[assetKey] = ownedAsset
 	end
 
-	accessory:Destroy()
+	asset:Destroy()
 
-	PlayerService:UpdatePlayer(player)
-
-	PopupUIRemote:FireClient(player, Messages.PurchaseSuccess)
-
-	InventoryUIRemote:FireClient(
-		player,
-		{
-			Action = isNew and "Add" or "Update",
-			AssetId = assetId,
-			Data = ownedAsset
-		}
-	)
-	return true
+	return true, {
+		Success = true,
+		Message = Messages.PurchaseSuccess,
+		Action = isNew and "Add" or "Update",
+		AssetId = assetId,
+		Data = ownedAsset,
+	}
 end
 
 return AssetService

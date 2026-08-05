@@ -2,8 +2,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local CollectionService = game:GetService("CollectionService")
 
-local Assets = ReplicatedStorage:WaitForChild("Assets")
-
 local TweenService = game:GetService("TweenService")
 
 local BaseMannequin = ReplicatedStorage:WaitForChild("BaseMannequin")
@@ -124,7 +122,7 @@ local function updateAssetInfo(mannequin, asset, grade, mutation)
 		costLabel.Text = "$" .. math.floor(asset.Price * MutationDatabase[mutation].CostMultiplier)
 
 		costLabel.TextColor3 =Color3.fromRGB(255, 223, 0)
-
+		
 		info.Enabled = true
 	end
 end

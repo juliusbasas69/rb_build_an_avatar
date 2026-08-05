@@ -1,4 +1,3 @@
-local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
@@ -9,13 +8,12 @@ local PlayerScripts = Player:WaitForChild("PlayerScripts")
 local GuiUtil = require(PlayerScripts.Client.Shared.Util.GuiUtil)
 local PlayerClientService = require(PlayerScripts.Client.Shared.Service.PlayerClientService)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
-local Tags = require(ReplicatedStorage.Shared.Tags)
 
 local OpenMannequinPickerUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.OpenMannequinPickerUIRemote)
 local RequestPlaceMannequinRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.RequestPlaceMannequinRemote)
 local UpdateMannequinPickerUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateMannequinPickerUIRemote)
 
-local mannequins = ReplicatedStorage:WaitForChild("Mannequins")
+local Mannequins = ReplicatedStorage:WaitForChild("Mannequins")
 
 local MainGui = GuiUtil:GetMainGui()
 local MenuGui = MainGui:WaitForChild("MenuGui")
@@ -183,7 +181,7 @@ UpdateMannequinPickerUIRemote.OnClientEvent:Connect(function(mannequinId)
         return
     end
 
-	local mannequin = mannequins[mannequinId]
+	local mannequin = Mannequins[mannequinId]
 
 	if not mannequin then
 		frame:Destroy()

@@ -4,10 +4,7 @@ local CollectionService = game:GetService("CollectionService")
 
 local ProximityPromptFactory = require(ServerScriptService.Server.Shared.ProximityPromptFactory)
 local PlayerService = require(ServerScriptService.Server.Player.PlayerService)
-local TableClone = require(ReplicatedStorage.Shared.Util.TableClone)
 local Tags = require(ReplicatedStorage.Shared.Tags)
-
-local PlacedMannequinData = require(ReplicatedStorage.Shared.Data.PlacedMannequinData)
 
 local MannequinService = {}
 
@@ -88,9 +85,7 @@ function MannequinService:LoadMannequins(player, plot)
 		return
 	end
 
-	local inventory = playerData.Inventory
 	local platforms = playerData.Platforms
-	local mannequins = inventory.Mannequins
 
 	local platformsFolder = plot:WaitForChild("Platforms")
 
