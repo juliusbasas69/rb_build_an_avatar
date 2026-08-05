@@ -149,7 +149,7 @@ local function moveMannequin(plot, mannequin, index)
 
 	local distance = (rootPart.Position - destination.Position).Magnitude
 
-	local duration = distance / (speed)
+	local duration = distance / (speed * 1.5)
 
 	local tween = TweenService:Create(
 		rootPart,
@@ -176,39 +176,29 @@ local function destroyMannequin(plot)
 		return
 	end
 
-	local destroyTasks = {}
-
 	for _, mannequin in ipairs(portalMannequinsFolder:GetChildren()) do
-		
-		table.insert(destroyTasks, task.spawn(function()
+		local rootPart = mannequin:WaitForChild("HumanoidRootPart")
+		local destination = destroyPoint
 
-			local rootPart = mannequin:WaitForChild("HumanoidRootPart")
+		local distance = (rootPart.Position - destination.Position).Magnitude
 
-			local distance = (rootPart.Position - destroyPoint.Position).Magnitude
-			local duration = distance / speed
+		local duration = distance / (speed * 1.5)
 
-			local tween = TweenService:Create(
-				rootPart,
-				TweenInfo.new(
-					duration,
-					Enum.EasingStyle.Linear
-				),
-				{
-					Position = destroyPoint.Position
-				}
-			)
+		local tween = TweenService:Create(
+			rootPart,
+			TweenInfo.new(
+				duration,
+				Enum.EasingStyle.Linear
+			),
+			{
+				Position = destination.Position
+			}
+		)
 
-			tween:Play()
-			tween.Completed:Wait()
+		tween:Play()
+		tween.Completed:Wait()
 
-			mannequin:Destroy()
-
-		end))
-	end
-
-	-- wait until all destroy animations finish
-	for _, thread in ipairs(destroyTasks) do
-		task.wait()
+		mannequin:Destroy()
 	end
 end
 
@@ -220,7 +210,7 @@ local function setupMannequin(plot, asset, grade, mutation, index)
 
 	local clone = BaseMannequin:Clone()
 	clone.Parent = portalMannequinsFolder
-	clone:PivotTo(spawnPoint.CFrame * CFrame.Angles(0, math.rad(180), 0))
+ 	clone:PivotTo(spawnPoint.CFrame * CFrame.Angles(0, math.rad(180), 0))
 
 	local prompt = ProximityPromptFactory:Create({
 		Parent = clone:FindFirstChild("HumanoidRootPart"),
@@ -230,17 +220,12 @@ local function setupMannequin(plot, asset, grade, mutation, index)
 
 	CollectionService:AddTag(prompt, Tags.BuyAssetPrompt)
 
-	task.spawn(function()
-		local moveDelay = (speed >= 16) and 0.25 or 0.35
+	updateAssetInfo(clone, asset, grade, mutation)
 
-		task.wait((index - 1) * moveDelay)
-		
-		updateAssetInfo(clone, asset, grade, mutation)
+	--task.spawn(function()
 		applyAsset(clone, asset)
-
-
 		moveMannequin(plot, clone, index)
-	end)
+	--end)
 
 end
 
@@ -256,8 +241,7 @@ function PortalService:SpawnAsset(player, plot)
 		local grade = AssetRollService:RollGrade(portalLevel)
 		local mutation = AssetRollService:RollMutation()
 
-		setupMannequin(plot, asset, grade, mutation, index)
-
+		setupMannequin(plot, asset, grade, mutation, index)	
 	end
 end
 
