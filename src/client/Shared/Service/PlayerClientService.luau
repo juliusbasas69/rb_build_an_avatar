@@ -9,7 +9,12 @@ local PlayerData
 local PlayerClientService = {}
 
 function PlayerClientService:Initialize()
+    self:Refresh()
+end
+
+function PlayerClientService:Refresh()
     PlayerData = RequestPlayerDataRemote:InvokeServer()
+    return PlayerData
 end
 
 function PlayerClientService:GetPlayerData()

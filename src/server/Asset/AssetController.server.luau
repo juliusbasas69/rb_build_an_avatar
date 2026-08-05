@@ -46,8 +46,8 @@ local function handleBuyAssetPrompt(prompt)
 
 		InventoryUIRemote:FireClient(player, {
 			Action = result.Action,
-			AssetId = result.AssetId,
-			Data = result.Data,
+			AssetKey = result.AssetKey,
+			AssetData = result.AssetData
 		})
 	end)
 end

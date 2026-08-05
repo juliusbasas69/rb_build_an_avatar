@@ -21,8 +21,6 @@ local PortalService = {}
 
 local function applyAsset(mannequin, asset)
 
-	print(mannequin)
-
 	local humanoid = mannequin:WaitForChild("Humanoid")
 
 	local description = humanoid:GetAppliedDescription()

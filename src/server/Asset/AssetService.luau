@@ -109,8 +109,8 @@ function AssetService:BuyAsset(player, asset)
 		Success = true,
 		Message = Messages.PurchaseSuccess,
 		Action = isNew and "Add" or "Update",
-		AssetId = assetId,
-		Data = ownedAsset,
+		AssetKey = assetKey,
+		AssetData = ownedAsset
 	}
 end
 

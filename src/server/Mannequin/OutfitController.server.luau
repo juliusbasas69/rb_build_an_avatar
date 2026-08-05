@@ -45,8 +45,6 @@ SaveMannequinOutfitRemote.OnServerEvent:Connect(function(player, platformId, out
     --     return
     -- end
 
-    print(outfitData)
-
     playerData.Platforms[platformId].PlacedMannequin.Outfit = TableClone:Shallow(outfitData)
 
     PlayerService:UpdatePlayer(player)

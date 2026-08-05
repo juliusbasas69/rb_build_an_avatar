@@ -115,10 +115,7 @@ function PlayerService:UpdatePlayerMannequins(player, platformId, mannequinId)
 	platforms[platformId].HasMannequin = true
 	platforms[platformId].PlacedMannequin = placedMannequin
 
-	print(typeof(mannequinId))
-	print(mannequins)
 	local mannequin = mannequins[mannequinId]
-	print(mannequin)
 
     if mannequin.Quantity > 1 then
 

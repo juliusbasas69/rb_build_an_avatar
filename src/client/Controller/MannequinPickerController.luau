@@ -90,8 +90,6 @@ local function loadMannequinFrames(mannequins)
 
 		frame.MouseButton1Click:Connect(function()
 
-			print(currentPlatformId)
-
 			RequestPlaceMannequinRemote:FireServer(mannequinId, currentPlatformId)
 		end)
 
