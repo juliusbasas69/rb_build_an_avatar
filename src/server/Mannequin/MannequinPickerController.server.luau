@@ -18,9 +18,9 @@ local RequestPlaceMannequinRemote = ReplicatedStorage.Remotes:WaitForChild(Remot
 local UpdateMannequinPickerUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.UpdateMannequinPickerUIRemote)
 local PopupUIRemote = ReplicatedStorage.Remotes:WaitForChild(Remotes.PopupUIRemote)
 
-local function placeMannequin(player, plot, platformId, mannequinId) : boolean
+local function placeMannequin(plot, platformId, mannequinId) : boolean
 	
-	return MannequinService:PlaceMannequin(player, plot, platformId, mannequinId)
+	return MannequinService:PlaceMannequin(plot, platformId, mannequinId)
 end
 
 RequestPlaceMannequinRemote.OnServerEvent:Connect(function(player, mannequinId, platformId)

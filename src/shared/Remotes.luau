@@ -1,7 +1,7 @@
 local Remotes = {
     OpenSettingsUIRemote = "OpenSettingsUIRemote",
     OpenMannequinPickerUIRemote = "OpenMannequinPickerUIRemote",
-    OpenMannequinCustomizationUIRemote = "OpenMannequinCustomizationUIRemote",    
+    OpenWardrobeUIRemote = "OpenWardrobeUIRemote",    
     UpdateMannequinPickerUIRemote = "UpdateMannequinPickerUIRemote",
     UpdateInventoryUIRemote = "UpdateInventoryUIRemote",
     PopupUIRemote = "PopupUIRemote",
@@ -11,7 +11,7 @@ local Remotes = {
     RequestPlayerDataRemote = "RequestPlayerDataRemote",
     GetPreviewAssetsRemote = "GetPreviewAssetsRemote",
 
-    SaveMannequinOutfitRemote = "SaveMannequinOutfitRemote",
+    SaveWardrobeRemote = "SaveWardrobeRemote",
 
     RequestAsset3DPreviewRemote = "RequestAsset3DPreviewRemote",
 

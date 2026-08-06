@@ -99,6 +99,12 @@ function AssetService:BuyAsset(player, asset)
 		ownedAsset.Grade = grade
 		ownedAsset.Mutation = mutation
 		ownedAsset.Income = assetData.Income * mutationData.IncomeMultiplier * gradeData.IncomeMultiplier
+		if assetData.AccessoryType == "Shoes" then
+			ownedAsset.Type = "Shoes"
+		else
+			ownedAsset.Type = assetData.AccessoryType.Name
+		end
+		ownedAsset.IsBundle = assetData.IsBundle
 
 		playerData.Inventory.Assets[assetKey] = ownedAsset
 	end

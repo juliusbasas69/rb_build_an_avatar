@@ -13,6 +13,8 @@ local AssetRollService = require(ServerScriptService.Server.Asset.AssetRollServi
 local MutationDatabase = require(ReplicatedStorage.Shared.Databases.MutationDatabase)
 local GradeDatabase = require(ReplicatedStorage.Shared.Databases.GradeDatabase)
 
+local Shoes = ReplicatedStorage:WaitForChild("Shoes")
+
 --THIS IS GAMEPASS
 local assetCount = 5
 local speed = 8
@@ -21,14 +23,41 @@ local PortalService = {}
 
 local function applyAsset(mannequin, asset)
 
-	local humanoid = mannequin:WaitForChild("Humanoid")
-
-	local description = humanoid:GetAppliedDescription()
-
 	local accessoryType = asset.AccessoryType
 	local assetId = asset.AssetId
 
-	-- Layered Clothing
+	-- Custom bundled shoes
+	if accessoryType == "Shoes" then
+
+		local shoeFolder = Shoes:FindFirstChild(tostring(assetId))
+		if not shoeFolder then
+			warn("Shoes folder not found:", assetId)
+			return
+		end
+
+		local left = shoeFolder:FindFirstChild("LeftShoeAccessory")
+		if left then
+			left:Clone().Parent = mannequin
+		end
+
+		local right = shoeFolder:FindFirstChild("RightShoeAccessory")
+		if right then
+			right:Clone().Parent = mannequin
+		end
+
+		return
+	end
+
+	local humanoid = mannequin:WaitForChild("Humanoid")
+	local description = humanoid:GetAppliedDescription()
+
+	description.HeadColor = BrickColor.White().Color
+	description.LeftArmColor = BrickColor.White().Color
+	description.RightArmColor = BrickColor.White().Color
+	description.LeftLegColor = BrickColor.White().Color
+	description.RightLegColor = BrickColor.White().Color
+	description.TorsoColor = BrickColor.White().Color
+	
 	if accessoryType == Enum.AccessoryType.Jacket
 		or accessoryType == Enum.AccessoryType.Shirt
 		or accessoryType == Enum.AccessoryType.Pants
@@ -44,7 +73,7 @@ local function applyAsset(mannequin, asset)
 		local accessories = description:GetAccessories(true)
 
 		table.insert(accessories, {
-			AssetId = assetId,
+			AssetId = tonumber(assetId),
 			AccessoryType = accessoryType,
 			IsLayered = true,
 			Order = #accessories + 1
@@ -62,7 +91,7 @@ local function applyAsset(mannequin, asset)
 		description.HairAccessory = description.HairAccessory .. "," .. assetId
 
 	elseif accessoryType == Enum.AccessoryType.Face then
-
+	
 		description.FaceAccessory = description.FaceAccessory .. "," .. assetId
 
 	elseif accessoryType == Enum.AccessoryType.Neck then

@@ -3,7 +3,7 @@ local Tags = {
 	BuyAssetPrompt = "BuyAssetPrompt",
 	Mannequin = "Mannequin",
     OpenMannequinPickerUITag = "OpenMannequinPickerUITag",
-    OpenMannequinCustomizationUITag = "OpenMannequinCustomizationUITag",
+    OpenWardrobeUITag = "OpenWardrobeUITag",
 
 	Conveyor = "Conveyor",
 	Plot = "Plot",

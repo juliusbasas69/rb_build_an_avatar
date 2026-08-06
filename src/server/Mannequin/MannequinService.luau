@@ -69,7 +69,7 @@ function MannequinService:PlaceMannequin(plot, platformId, mannequinId) : boolea
             ObjectText = "Mannequin",
         })
 
-        CollectionService:AddTag(prompt, Tags.OpenMannequinCustomizationUITag)
+        CollectionService:AddTag(prompt, Tags.OpenWardrobeUITag)
     end
 
 	PlaceMannequinOnPlatform(clone, stand)

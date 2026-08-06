@@ -6,6 +6,7 @@ local InventoryAssetData = {
     Mutation = "",
     Income = 0,
     Type = "",
+    IsBundle = false
 }
 
 return InventoryAssetData

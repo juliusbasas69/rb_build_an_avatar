@@ -7,6 +7,7 @@ local PlayerScripts = Player:WaitForChild("PlayerScripts")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local GuiUtil = require(PlayerScripts.Client.Shared.Util.GuiUtil)
+local UIUtil = require(PlayerScripts.Client.Shared.Util.UIUtil)
 local PlayerClientService = require(PlayerScripts.Client.Shared.Service.PlayerClientService)
 local GradeDatabase = require(ReplicatedStorage.Shared.Databases.GradeDatabase)
 local AssetDatabase = require(ReplicatedStorage.Shared.Databases.AssetsDatabase)
@@ -47,24 +48,16 @@ local function updateInventoryCount()
 	CapacityLabel.Text = string.format("Capacity: %d/%d", assetCount, MAX_INVENTORY)
 end
 
-local function displayNoInventory()
-    StatusLabel.Text = "🍃 Your inventory is empty!"
-    StatusLabel.Visible = true
-
-    -- Styling
-    StatusLabel.BackgroundTransparency = 1
-    StatusLabel.TextColor3 = Color3.fromHex("#4E7A4A")
-    StatusLabel.TextStrokeColor3 = Color3.fromHex("#FFFFFF")
-    StatusLabel.TextStrokeTransparency = 0.65
-    StatusLabel.Font = Enum.Font.LuckiestGuy -- or GothamBold if you prefer
-    StatusLabel.TextSize = 22
-    StatusLabel.TextWrapped = true
-end
-
 local function createPreview(asset, previewType)
 
 	if previewType == "2D" then
-		ViewAsset2D.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=" .. asset.AssetId .. "&width=420&height=420&format=png"
+
+        if asset.IsBundle then
+            ViewAsset2D.Image = "rbxthumb://type=BundleThumbnail&id=" .. asset.AssetId .. "&w=420&h=420"
+        else
+            ViewAsset2D.Image = "rbxthumb://type=Asset&id=" .. asset.AssetId .. "&w=420&h=420"
+        end
+
 		return
 	end
 
@@ -165,6 +158,8 @@ end
 
 local function createAssetFrame(assetKey, assetData)
 
+    StatusLabel.Visible = false
+
     local frame = template:Clone()
 
     frame.Name = assetKey
@@ -186,10 +181,11 @@ local function createAssetFrame(assetKey, assetData)
 
     QuantityLabel.Text = "x" .. (assetData.Quantity or 1)
 
-    ImageLabel.Image =
-        "https://www.roblox.com/asset-thumbnail/image?assetId="
-        .. assetData.AssetId
-        .. "&width=420&height=420&format=png"
+    if assetData.IsBundle then
+        ImageLabel.Image = "rbxthumb://type=BundleThumbnail&id=" .. assetData.AssetId .. "&w=420&h=420"
+    else
+        ImageLabel.Image = "rbxthumb://type=Asset&id=" .. assetData.AssetId .. "&w=420&h=420"
+    end
 
     frame.MouseButton1Click:Connect(function()
         showAssetDetails(assetData)
@@ -204,7 +200,7 @@ local function loadInventory()
     local assets = inventory.Assets
 
     if not next(assets) then
-        displayNoInventory()
+        UIUtil:DisplayNoInventory(StatusLabel, Color3.fromHex("#4E7A4A"))
         return
     end
 

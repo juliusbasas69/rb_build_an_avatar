@@ -1,4 +1,4 @@
-local OutfitData = {
+local WardrobeData = {
     -- Classic
     Hair = "",
 
@@ -26,6 +26,4 @@ local OutfitData = {
     EyelashAccessory = "",
 }
 
-export type OutfitData = typeof(OutfitData)
-
-return OutfitData
+return WardrobeData
